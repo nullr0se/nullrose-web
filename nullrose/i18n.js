@@ -8,7 +8,7 @@
   const DICT = {
     en: {
       services:'design — motion — systems',
-      ethos:'<b>purple is the verb.</b> white is the noun.',
+      ethos:'“Beauty is nothing but the beginning of terror.”<cite>R. M. Rilke</cite>',
       about:'ABOUT',         about_sub:'// who is maciej',
       navi_sub:'social coverage',
       derm_sub:'brand + product // amazon',
@@ -20,7 +20,7 @@
     },
     pl: {
       services:'projektowanie — motion — systemy',
-      ethos:'<b>fiolet to czasownik.</b> biel to rzeczownik.',
+      ethos:'„Piękno jest jedynie początkiem grozy.”<cite>R. M. Rilke</cite>',
       about:'O MNIE',        about_sub:'// kim jest maciej',
       navi_sub:'obsługa social media',
       derm_sub:'marka + produkt // amazon',
@@ -33,7 +33,12 @@
   };
 
   const KEY='nullrose-lang';
-  let lang = localStorage.getItem(KEY) || 'en';
+  // /pl deep-link → Polish.  Else: html[lang] override, then stored, then EN.
+  const inPl = /\/pl\/?$/.test(location.pathname);
+  const routing = !!window.__NR_ROUTING;        // true only on the deployed build
+  let lang = inPl ? 'pl'
+           : (document.documentElement.getAttribute('lang')==='pl' ? 'pl'
+           : (localStorage.getItem(KEY) || 'en'));
 
   function paint(l){
     const d=DICT[l]||DICT.en;
@@ -51,11 +56,20 @@
 
   function swap(l){
     if(l===lang) return;
-    lang=l; localStorage.setItem(KEY,l);
+    localStorage.setItem(KEY,l);
     if(window.__entity) window.__entity.fire(0.45);   // a signal fires on the cut
     const frame=document.querySelector('.frame');
     frame.classList.add('cut');
-    setTimeout(()=>paint(l), 90);                     // swap mid-glitch
+
+    // On the deployed site, language lives in the URL: / ⇄ /pl/ (shareable).
+    if(routing){
+      const base=location.pathname.replace(/\/pl\/?$/, '/').replace(/index\.html$/, '');
+      const dest = l==='pl' ? base.replace(/\/?$/, '/')+'pl/' : base.replace(/\/?$/, '/');
+      setTimeout(()=>{ location.href = dest; }, 320);  // navigate after the glitch
+      return;
+    }
+    lang=l;
+    setTimeout(()=>paint(l), 90);                     // swap mid-glitch (editor / single page)
     setTimeout(()=>frame.classList.remove('cut'), 360);
   }
 

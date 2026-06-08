@@ -77,13 +77,31 @@ function buildBarcode(){
   if(code) setInterval(()=>{ code.textContent='∅0x'+hx()+'·54.35N'; },1500);
 }
 
-/* ══ the wordmark glitches on impact ══ */
-function wmGlitch(){
-  const wm=document.getElementById('wordmark'); if(!wm) return;
-  const seq=['drop-shadow(2px 0 #8A4FB2) drop-shadow(-2px 0 #B47EDE)','none',
-             'drop-shadow(-1.5px 0 #8A4FB2) drop-shadow(1.5px 0 #C99CF2)','none',
-             'drop-shadow(1px 0 #B47EDE)','none'];
-  let i=0; const iv=setInterval(()=>{ wm.style.filter=seq[i]||'none'; if(++i>=seq.length){clearInterval(iv);wm.style.filter='none';} },42);
+/* ══ logo glitch: RGB-split + horizontal jitter (console artefact) ══ */
+function wmGlitch(strong){
+  const logo=document.getElementById('logo-svg'); if(!logo) return;
+  const b=strong?2.6:1.6;
+  const seq=[
+    `drop-shadow(${b}px 0 #8A4FB2) drop-shadow(-${b}px 0 #C99CF2)`,'none',
+    `drop-shadow(-${(b*0.7).toFixed(1)}px 0 #8A4FB2) drop-shadow(${(b*0.7).toFixed(1)}px 0 #B47EDE)`,'none',
+    `drop-shadow(${(b*0.5).toFixed(1)}px 0 #C99CF2)`,'none'];
+  const jit=[strong?-3:-1.5,0,strong?2:1,0,-1,0];
+  let i=0; const iv=setInterval(()=>{
+    logo.style.filter=seq[i]||'none';
+    logo.style.transform=`translateX(${jit[i]||0}px)`;
+    if(++i>=seq.length){clearInterval(iv);logo.style.filter='none';logo.style.transform='';}
+  },38);
+}
+
+/* ══ console blink: the whole logo flickers on/off like a CRT refresh ══ */
+function consoleBlink(strong){
+  const logo=document.getElementById('logo-svg'); if(!logo||!window.gsap) return;
+  const seq = strong ? [0.12,1,0,1,0.4,1,0.05,1] : [0.3,1,0,1,1];
+  const tl=gsap.timeline();
+  seq.forEach((o,i)=> tl.set(logo,{opacity:o}, i*0.05));
+  tl.add(()=>wmGlitch(strong), 0);
+  tl.set(logo,{opacity:1});
+  return tl;
 }
 
 window.addEventListener('DOMContentLoaded',()=>{
@@ -101,42 +119,45 @@ window.addEventListener('DOMContentLoaded',()=>{
   const PURP='#8A4FB2', LILAC='#C99CF2', WHITE='#FFFFFF';
 
   if(slash && head && window.gsap){
-    const p={v:0};
-    gsap.set(slash,{attr:{height:0}, fill:PURP, filter:'drop-shadow(0 0 9px rgba(201,156,242,.95))'});
-    gsap.set(head,{attr:{r:0, cy:TOP}, fill:LILAC, filter:'drop-shadow(0 0 7px rgba(201,156,242,1))'});
-    gsap.set(wm,{opacity:0});
+    const TOPY=TOP, FLY=30;
+    gsap.set(slash,{attr:{height:0, y:TOPY-FLY}, fill:PURP, filter:'drop-shadow(0 0 9px rgba(201,156,242,.95))', opacity:0});
+    gsap.set(head,{attr:{r:0, cy:TOPY}, fill:LILAC, filter:'drop-shadow(0 0 7px rgba(201,156,242,1))'});
+    gsap.set(wm,{opacity:1});
+    gsap.set('#logo-svg',{opacity:0});
 
-    const draw=()=>{ slash.setAttribute('height', FULL*p.v); head.setAttribute('cy', TOP+FULL*p.v); };
-
-    gsap.timeline({delay:0.55})
-      // wordmark fades up first
-      .to(wm,{opacity:1, duration:0.5, ease:'power2.out'})
-      // the slash is DRAWN IN by the travelling head
-      .to(head,{attr:{r:7}, duration:0.12}, '-=0.15')
-      .to(p,{v:1, duration:0.40, ease:'power3.in', onUpdate:draw})
-      // overshoot + settle
-      .to(slash,{attr:{height:FULL+8}, duration:0.07, ease:'power2.out', onComplete:()=>head.setAttribute('cy',TOP+FULL+8)})
-      .to(slash,{attr:{height:FULL}, duration:0.24, ease:'elastic.out(1,0.5)', onUpdate:()=>head.setAttribute('cy', TOP+parseFloat(slash.getAttribute('height')))})
-      // impact: head flares, wordmark glitches, entity fires
-      .add(()=>{ wmGlitch(); fire(0.85); })
-      .to(head,{attr:{r:17}, duration:0.10, ease:'power2.out'}, '<')
-      .to(head,{attr:{r:0}, duration:0.34, ease:'power3.in'})
+    gsap.timeline({delay:0.4})
+      // terminal power-on: the wordmark flickers in
+      .add(consoleBlink(true))
+      .add(()=>fire(0.6))
+      // the slash FLIES into the O along its own axis, glitching
+      .set(slash,{opacity:1})
+      .to(slash,{attr:{height:FULL, y:TOPY}, duration:0.15, ease:'power4.in',
+        onUpdate(){ const t=this.progress(); slash.style.opacity = (t>0.4 && Math.random()<0.3)?0.3:1; }})
+      .set(slash,{opacity:1})
+      // overshoot along axis + elastic settle
+      .to(slash,{attr:{height:FULL+8, y:TOPY-8}, duration:0.06, ease:'power2.out'})
+      .to(slash,{attr:{height:FULL, y:TOPY}, duration:0.22, ease:'elastic.out(1,0.5)'})
+      // impact: glitch burst, head flare, entity fires
+      .add(()=>{ wmGlitch(true); fire(0.9); head.setAttribute('cy',TOPY+FULL); })
+      .fromTo(head,{attr:{r:16}},{attr:{r:0}, duration:0.32, ease:'power3.in'})
       // cool the purple to white
-      .to(slash,{fill:LILAC, duration:0.16}, '-=0.40')
-      .to(slash,{fill:WHITE, filter:'drop-shadow(0 0 0 rgba(201,156,242,0))', duration:0.55, ease:'power3.out', onComplete:scheduleIdle});
+      .to(slash,{fill:LILAC, duration:0.14}, '-=0.34')
+      .to(slash,{fill:WHITE, filter:'drop-shadow(0 0 0 rgba(201,156,242,0))', duration:0.5, ease:'power3.out', onComplete:scheduleIdle});
 
-    function scheduleIdle(){ gsap.delayedCall(14+Math.random()*6, idle); }
+    function scheduleIdle(){ gsap.delayedCall(5+Math.random()*7, idle); }
     function idle(){
-      collectiveHeartbeat(); fire(0.55);
-      // a purple signal travels back down the slash, then cools
-      gsap.set(head,{attr:{r:5, cy:TOP}, filter:'drop-shadow(0 0 6px rgba(201,156,242,1))'});
-      gsap.timeline({onComplete:scheduleIdle})
-        .to(slash,{fill:PURP, filter:'drop-shadow(0 0 7px rgba(201,156,242,.85))', duration:0.18})
-        .to(head,{attr:{cy:TOP+FULL}, duration:0.42, ease:'power2.inOut'}, '<')
-        .add(()=>{ if(Math.random()<0.5) wmGlitch(); })
-        .to(head,{attr:{r:0}, duration:0.2})
-        .to(slash,{fill:LILAC, duration:0.12}, '-=0.2')
-        .to(slash,{fill:WHITE, filter:'drop-shadow(0 0 0 rgba(201,156,242,0))', duration:0.55, ease:'power3.out'});
+      const strong=Math.random()<0.34;
+      consoleBlink(strong);
+      fire(strong?0.7:0.4);
+      if(strong) collectiveHeartbeat();
+      // sometimes a purple charge re-strikes the slash, then cools
+      if(Math.random()<0.6){
+        gsap.timeline()
+          .to(slash,{fill:PURP, filter:'drop-shadow(0 0 7px rgba(201,156,242,.85))', duration:0.12})
+          .to(slash,{fill:LILAC, duration:0.1})
+          .to(slash,{fill:WHITE, filter:'drop-shadow(0 0 0 rgba(201,156,242,0))', duration:0.5, ease:'power3.out'});
+      }
+      scheduleIdle();
     }
   }
 
@@ -162,4 +183,29 @@ window.addEventListener('DOMContentLoaded',()=>{
   }
 
   cells.forEach(c=> c.addEventListener('mouseenter',()=>fire(0.18)));
+
+  /* ══ masthead controls ══ */
+  const root=document.documentElement;
+  const GRAIN=[0, 0.42, 0.72]; let gi=1;
+  document.querySelectorAll('.ctl').forEach(btn=>{
+    btn.addEventListener('click',()=>{
+      const k=btn.dataset.ctl;
+      if(k==='invert'){
+        const on=!root.classList.contains('invert');
+        root.classList.toggle('invert', on);
+        document.body.style.filter = on ? 'invert(1) hue-rotate(180deg)' : '';
+        btn.classList.toggle('is-on', on);
+        wmGlitch(true); fire(0.6);
+      }else if(k==='signal'){
+        fire(1); collectiveHeartbeat(); wmGlitch(true);
+        btn.classList.add('is-on'); setTimeout(()=>btn.classList.remove('is-on'),520);
+      }else if(k==='grain'){
+        gi=(gi+1)%GRAIN.length;
+        root.style.setProperty('--grit', GRAIN[gi]);
+        if(window.__entity) window.__entity.setGrit(GRAIN[gi]);
+        btn.classList.toggle('is-on', gi!==1);
+        btn.querySelector('span').textContent = gi===0?'GRAIN·0':gi===2?'GRAIN·2':'GRAIN';
+      }
+    });
+  });
 });
