@@ -139,6 +139,11 @@ function attachRev(el, fast){
 }
 
 window.addEventListener('DOMContentLoaded',()=>{
+  // default to white / inverted mode
+  document.documentElement.classList.add('invert');
+  document.body.style.filter = 'invert(1) hue-rotate(180deg)';
+  document.querySelector('[data-ctl="invert"]')?.classList.add('is-on');
+
   buildStream('term-navi',56,0.30,false);
   buildStream('term-derm',60,0.26,false);
   buildStream('term-mit', 52,0.32,false);
