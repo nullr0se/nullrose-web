@@ -7,24 +7,24 @@
 (function(){
   const DICT = {
     en: {
-      services:'design — motion — systems',
+      services:'Design / Video / Systems',
       ethos:'“Beauty is nothing but the beginning of terror.”<cite>R. M. Rilke</cite>',
       about:'ABOUT',         about_sub:'// who is maciej',
       navi_sub:'social coverage',
       derm_sub:'brand + product // amazon',
-      mit_sub:'motion',
+      mit_sub:'video',
       contact:'CONTACT',     contact_sub:'// reach',
       archive:'ARCHIVE',     archive_sub:'early work',
       systems:'SYSTEMS',
       showreel_sub:'▶ play',
     },
     pl: {
-      services:'projektowanie — motion — systemy',
+      services:'projektowanie / Wideo / systemy',
       ethos:'„Piękno jest jedynie początkiem grozy.”<cite>R. M. Rilke</cite>',
       about:'O MNIE',        about_sub:'// kim jest maciej',
       navi_sub:'obsługa social media',
       derm_sub:'marka + produkt // amazon',
-      mit_sub:'motion',
+      mit_sub:'Wideo',
       contact:'KONTAKT',     contact_sub:'// napisz',
       archive:'ARCHIWUM',    archive_sub:'wczesne prace',
       systems:'SYSTEMY',
@@ -34,7 +34,7 @@
 
   const KEY='nullrose-lang';
   // /pl deep-link → Polish.  Else: html[lang] override, then stored, then EN.
-  const inPl = /\/pl\/?$/.test(location.pathname);
+  const inPl = /\/pl\/(index\.html)?$/.test(location.pathname);
   const routing = !!window.__NR_ROUTING;        // true only on the deployed build
   let lang = inPl ? 'pl'
            : (document.documentElement.getAttribute('lang')==='pl' ? 'pl'
@@ -63,7 +63,7 @@
 
     // On the deployed site, language lives in the URL: / ⇄ /pl/ (shareable).
     if(routing){
-      const base=location.pathname.replace(/\/pl\/?$/, '/').replace(/index\.html$/, '');
+      const base=location.pathname.replace(/\/pl\/(index\.html)?$/, '/').replace(/index\.html$/, '');
       const dest = l==='pl' ? base.replace(/\/?$/, '/')+'pl/' : base.replace(/\/?$/, '/');
       setTimeout(()=>{ location.href = dest; }, 320);  // navigate after the glitch
       return;

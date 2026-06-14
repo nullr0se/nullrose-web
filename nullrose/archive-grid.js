@@ -9,6 +9,13 @@
   if(!box) return;
   const reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;
 
+  // real palm silhouette (trimmed + tinted lilac); standalone-aware
+  const BASE=/\/pl\/(index\.html)?$/.test(location.pathname)?'../':'';
+  const PALM_AR=0.637, PALM_BX=0.437;        // sprite aspect + trunk-base x (fraction)
+  const palmImg=new Image();
+  palmImg.src=(window.__resources && window.__resources['palm']) || BASE+'nullrose/img/palm.png';
+  let palmReady=false; palmImg.onload=()=>{ palmReady=true; };
+
   box.innerHTML='<canvas></canvas>';
   box.style.opacity='1'; box.style.animation='none';
   const cv=box.querySelector('canvas');
@@ -24,7 +31,7 @@
   size();
 
   const cell=box.closest('.cell');
-  const HZ=0.42;                              // horizon height — low camera, eye near the tarmac
+  const HZ=0.34;                              // horizon high in frame — camera laid flat on the tarmac
   let targVX=0.5, targVY=HZ, vx=0.5, vy=HZ, hover=0, targHover=0;
   cell.addEventListener('mousemove',e=>{
     const r=cv.getBoundingClientRect();
@@ -37,30 +44,19 @@
   const RAILS=4, HLINES=12, PALMS=7;
   const win=u=>Math.min(1,u/0.14)*Math.min(1,(1-u)/0.14);  // 0 at both ends → seamless loop
   let t=0, last=performance.now();
+  const persp=u=>u*u*u;                      // stronger foreshortening — a flat, on-the-tarmac read
 
-  /* a minimal palm silhouette — trunk + drooping crown, neon/additive */
-  const FROND=[[-0.95,-0.26],[-0.74,-0.60],[-0.32,-0.80],[0.32,-0.80],[0.74,-0.60],[0.95,-0.26]];
-  function palm(x, baseY, s, a, lean){
-    if(s<2) return;
-    const topX=x+lean*s*0.16, topY=baseY-s*0.72;
-    const col='rgba(176,124,220,'+a.toFixed(3)+')';
-    ctx.strokeStyle=col; ctx.lineCap='round';
-    // trunk, slight bow away from the road
-    ctx.lineWidth=Math.max(0.6,s*0.05);
-    ctx.beginPath(); ctx.moveTo(x,baseY);
-    ctx.quadraticCurveTo(x+lean*s*0.10, baseY-s*0.36, topX, topY); ctx.stroke();
-    // crown
-    const len=s*0.5; ctx.lineWidth=Math.max(0.5,s*0.03);
-    for(let f=0;f<FROND.length;f++){
-      const dx=FROND[f][0]*len, dy=FROND[f][1]*len;
-      const tx=topX+dx, ty=topY+dy;
-      const cx=topX+dx*0.5, cy=topY+dy*0.5-len*0.30;   // arch up, then droop to tip
-      ctx.beginPath(); ctx.moveTo(topX,topY);
-      ctx.quadraticCurveTo(cx,cy,tx,ty); ctx.stroke();
-    }
-    // a faint coconut node at the crown
-    ctx.fillStyle=col; ctx.beginPath();
-    ctx.arc(topX,topY,Math.max(0.6,s*0.04),0,6.283); ctx.fill();
+  /* draw the palm sprite, anchored at its trunk base, mirrored on the left shoulder */
+  function palm(x, baseY, s, a, side){
+    if(!palmReady || s<4) return;
+    const dh=s, dw=s*PALM_AR;
+    ctx.save();
+    ctx.globalCompositeOperation='source-over';   // clean silhouette, not a blown-out additive blob
+    ctx.globalAlpha=Math.min(1,a);
+    ctx.translate(x, baseY);
+    if(side<0) ctx.scale(-1,1);              // mirror the left-hand colonnade
+    ctx.drawImage(palmImg, -PALM_BX*dw, -dh, dw, dh);
+    ctx.restore();
   }
 
   function frame(now){
@@ -71,15 +67,9 @@
     ctx.globalCompositeOperation='source-over';
     ctx.clearRect(0,0,W,H);
     ctx.globalCompositeOperation='lighter';  // additive → translucent neon, never opaque
-    const VPx=W*vx, VPy=H*vy, base=H;        // vanishing point on the horizon (~42%), road below it
-    const spread=W*0.46*(1+hover*0.12);
+    const VPx=W*vx, VPy=H*vy, base=H;        // vanishing point on the horizon; road runs to the bottom edge
+    const spread=W*0.50*(1+hover*0.12);
     const phase=t%1;
-
-    // a soft horizon glow where the road meets the sky
-    const hg=ctx.createRadialGradient(VPx,VPy,0,VPx,VPy,W*0.6);
-    hg.addColorStop(0,'rgba(201,156,242,0.20)');
-    hg.addColorStop(1,'rgba(201,156,242,0)');
-    ctx.fillStyle=hg; ctx.fillRect(0,Math.max(0,VPy-16),W,32);
 
     // vertical rails fan from the VP down to the bottom edge
     for(let i=-RAILS;i<=RAILS;i++){
@@ -93,7 +83,7 @@
     // horizontal rungs rush downward toward the viewer, looping
     for(let j=0;j<HLINES;j++){
       let u=(j/HLINES+phase)%1;             // 0 far(horizon) → 1 near(viewer)
-      const sf=u*u;                         // perspective bunching near the VP
+      const sf=persp(u);                    // perspective bunching near the VP
       const y=VPy+(base-VPy)*sf;
       const xL=VPx+((W/2-spread)-VPx)*sf;
       const xR=VPx+((W/2+spread)-VPx)*sf;
@@ -107,14 +97,14 @@
     const pOff=0.55;                         // how far outside the rail they stand (× road width)
     for(let j=0;j<PALMS;j++){
       const u=(j/PALMS+phase*0.85)%1;        // drift a touch slower than the rungs
-      const sf=u*u;
+      const sf=persp(u);
       const y=VPy+(base-VPy)*sf;
       const xL=VPx+((W/2-spread)-VPx)*sf;
       const xR=VPx+((W/2+spread)-VPx)*sf;
       const road=xR-xL;                       // road width at this depth
-      const s=Math.max(0,sf*H*1.15);          // rises nearly tile-tall as it nears the viewer
-      const a=(0.12+0.5*sf)*win(u)*0.62;      // matched fade window → loops seamlessly
-      palm(xL-road*pOff, y, s, a, -1);        // left shoulder, leans left
+      const s=Math.min(H*1.05, sf*H*1.7);     // sprite height — rises tall near the viewer
+      const a=(0.28+0.5*sf)*win(u);          // matched fade window → loops seamlessly
+      palm(xL-road*pOff, y, s, a, -1);        // left shoulder (mirrored)
       palm(xR+road*pOff, y, s, a,  1);        // right shoulder, leans right
     }
 

@@ -5,7 +5,7 @@
 
 /* in-cell register pulls from the brand language, not random hex */
 const DOCTRINE = [
-  'PURPLE IS THE VERB','WHITE IS THE NOUN','DESIGN — MOTION — SYSTEMS',
+  'PURPLE IS THE VERB','WHITE IS THE NOUN','DESIGN // MOTION // SYSTEMS',
   'THE O IS STRUCK TO NULL','∅ = NULLROSE','ONE ACCENT // NO SECOND HUE',
   'PURPLE NEVER SITS STILL','SLOW // LOW // BARELY ALIVE',
   'A DARK ENTITY ALIVE BUT BARELY','THE NULL RE-FIRES // RARE // QUIET',
@@ -77,31 +77,65 @@ function buildBarcode(){
   if(code) setInterval(()=>{ code.textContent='∅0x'+hx()+'·54.35N'; },1500);
 }
 
-/* ══ logo glitch: RGB-split + horizontal jitter (console artefact) ══ */
+/* ══ logo glitch: a subtle RGB-split + clip-band shimmer (like the quote cut) ══ */
 function wmGlitch(strong){
   const logo=document.getElementById('logo-svg'); if(!logo) return;
-  const b=strong?2.6:1.6;
+  const b=strong?1.6:1.0;                       // gentle chromatic split, no hard jumps
   const seq=[
-    `drop-shadow(${b}px 0 #8A4FB2) drop-shadow(-${b}px 0 #C99CF2)`,'none',
-    `drop-shadow(-${(b*0.7).toFixed(1)}px 0 #8A4FB2) drop-shadow(${(b*0.7).toFixed(1)}px 0 #B47EDE)`,'none',
-    `drop-shadow(${(b*0.5).toFixed(1)}px 0 #C99CF2)`,'none'];
-  const jit=[strong?-3:-1.5,0,strong?2:1,0,-1,0];
+    {f:`drop-shadow(${b}px 0 #8A4FB2) drop-shadow(-${b}px 0 #C99CF2)`, c:'inset(0 0 64% 0)',   x:strong?-0.8:-0.4},
+    {f:'none',                                                          c:'inset(0 0 0 0)',     x:0},
+    {f:`drop-shadow(-${(b*0.7).toFixed(1)}px 0 #8A4FB2) drop-shadow(${(b*0.7).toFixed(1)}px 0 #B47EDE)`, c:'inset(58% 0 0 0)', x:strong?0.6:0.3},
+    {f:'none',                                                          c:'inset(26% 0 34% 0)', x:0},
+    {f:`drop-shadow(${(b*0.5).toFixed(1)}px 0 #C99CF2)`,                c:'inset(0 0 0 0)',     x:-0.3},
+    {f:'none',                                                          c:'inset(0 0 0 0)',     x:0}];
   let i=0; const iv=setInterval(()=>{
-    logo.style.filter=seq[i]||'none';
-    logo.style.transform=`translateX(${jit[i]||0}px)`;
-    if(++i>=seq.length){clearInterval(iv);logo.style.filter='none';logo.style.transform='';}
-  },38);
+    const s=seq[i];
+    logo.style.filter=s.f;
+    logo.style.clipPath=s.c;
+    logo.style.transform=`translateX(${s.x}px)`;
+    if(++i>=seq.length){clearInterval(iv);logo.style.filter='';logo.style.clipPath='';logo.style.transform='';}
+  },50);
 }
 
-/* ══ console blink: the whole logo flickers on/off like a CRT refresh ══ */
+/* ══ console blink: a soft CRT shimmer — dips, never a hard blackout ══ */
 function consoleBlink(strong){
   const logo=document.getElementById('logo-svg'); if(!logo||!window.gsap) return;
-  const seq = strong ? [0.12,1,0,1,0.4,1,0.05,1] : [0.3,1,0,1,1];
+  const seq = strong ? [0.5,1,0.28,1,0.72,1] : [0.74,1,0.88,1];
   const tl=gsap.timeline();
-  seq.forEach((o,i)=> tl.set(logo,{opacity:o}, i*0.05));
+  seq.forEach((o,i)=> tl.set(logo,{opacity:o}, i*0.055));
   tl.add(()=>wmGlitch(strong), 0);
   tl.set(logo,{opacity:1});
   return tl;
+}
+
+/* ══ hover-rev: smoothly speed up / slow down an element's motion ══
+   handles CSS animations (via WAAPI playbackRate) AND any SMIL inside an
+   inner <svg> (by hand-driving the SVG clock). Ramps in on enter, out on leave. */
+function attachRev(el, fast){
+  if(!el) return;
+  fast = fast || 3.4;
+  const svg = el.querySelector('svg');
+  const canSmil = !!(svg && svg.pauseAnimations && svg.setCurrentTime && svg.unpauseAnimations);
+  const speed={v:1};
+  let raf=0, last=0;
+  const setCss=r=>{ try{ (el.getAnimations?el.getAnimations({subtree:true}):[]).forEach(a=>{ a.playbackRate=r; }); }catch(e){} };
+  function loop(now){
+    const dt=Math.min(0.05,(now-last)/1000); last=now;
+    if(canSmil){ try{ svg.setCurrentTime(svg.getCurrentTime()+dt*speed.v); }catch(e){} }
+    raf=requestAnimationFrame(loop);
+  }
+  function start(){ if(raf) return; if(canSmil){ try{ svg.pauseAnimations(); }catch(e){} }
+    last=performance.now(); raf=requestAnimationFrame(loop); }
+  function stop(){ if(raf){ cancelAnimationFrame(raf); raf=0; } if(canSmil){ try{ svg.unpauseAnimations(); }catch(e){} } }
+  function ramp(to){
+    if(window.gsap){
+      gsap.to(speed,{v:to,duration:to>1?0.7:1.0,ease:to>1?'power2.out':'power2.inOut',overwrite:true,
+        onUpdate:()=>setCss(speed.v),
+        onComplete:()=>{ if(to===1){ stop(); setCss(1); } }});
+    } else { speed.v=to; setCss(to); if(to===1) stop(); }
+  }
+  el.addEventListener('mouseenter',()=>{ start(); ramp(fast); });
+  el.addEventListener('mouseleave',()=>{ ramp(1); });
 }
 
 window.addEventListener('DOMContentLoaded',()=>{
@@ -110,6 +144,10 @@ window.addEventListener('DOMContentLoaded',()=>{
   buildStream('term-mit', 52,0.32,false);
   buildStream('term-strip',90,0.40,true);
   buildBarcode();
+
+  // wireframe sphere + checker strip: rev on hover
+  attachRev(document.querySelector('.sphere-deco'));
+  attachRev(document.querySelector('.checker'));
 
   const slash=document.getElementById('the_slash');
   const head=document.getElementById('strike_head');
@@ -144,18 +182,18 @@ window.addEventListener('DOMContentLoaded',()=>{
       .to(slash,{fill:LILAC, duration:0.14}, '-=0.34')
       .to(slash,{fill:WHITE, filter:'drop-shadow(0 0 0 rgba(201,156,242,0))', duration:0.5, ease:'power3.out', onComplete:scheduleIdle});
 
-    function scheduleIdle(){ gsap.delayedCall(5+Math.random()*7, idle); }
+    function scheduleIdle(){ gsap.delayedCall(7+Math.random()*9, idle); }
     function idle(){
-      const strong=Math.random()<0.34;
+      const strong=Math.random()<0.2;
       consoleBlink(strong);
-      fire(strong?0.7:0.4);
+      fire(strong?0.55:0.32);
       if(strong) collectiveHeartbeat();
-      // sometimes a purple charge re-strikes the slash, then cools
-      if(Math.random()<0.6){
+      // sometimes a faint purple charge re-warms the slash, then cools back to white
+      if(Math.random()<0.4){
         gsap.timeline()
-          .to(slash,{fill:PURP, filter:'drop-shadow(0 0 7px rgba(201,156,242,.85))', duration:0.12})
-          .to(slash,{fill:LILAC, duration:0.1})
-          .to(slash,{fill:WHITE, filter:'drop-shadow(0 0 0 rgba(201,156,242,0))', duration:0.5, ease:'power3.out'});
+          .to(slash,{fill:PURP, filter:'drop-shadow(0 0 5px rgba(201,156,242,.6))', duration:0.22, ease:'sine.inOut'})
+          .to(slash,{fill:LILAC, duration:0.14})
+          .to(slash,{fill:WHITE, filter:'drop-shadow(0 0 0 rgba(201,156,242,0))', duration:0.6, ease:'power3.out'});
       }
       scheduleIdle();
     }
@@ -163,14 +201,15 @@ window.addEventListener('DOMContentLoaded',()=>{
 
   /* ══ off-sync collective border breathing ══ */
   const cells=[...document.querySelectorAll('.cell')];
+  const breaths=[];
   cells.forEach((c)=>{
     const dur=4.6+Math.random()*2.6, delay=Math.random()*4;
-    gsap.fromTo(c,{'--bp':0},{'--bp':1, duration:dur, delay, repeat:-1, yoyo:true, ease:'sine.inOut',
+    breaths.push(gsap.fromTo(c,{'--bp':0},{'--bp':1, duration:dur, delay, repeat:-1, yoyo:true, ease:'sine.inOut',
       onUpdate(){
         const v=parseFloat(getComputedStyle(c).getPropertyValue('--bp'))||0;
         c.style.borderColor=`rgba(180,126,222,${(0.16+0.34*v).toFixed(3)})`;
         c.style.boxShadow=v>0.55?`0 0 ${(14*v).toFixed(1)}px rgba(138,79,178,${(0.14*v).toFixed(3)}) inset`:'none';
-      }});
+      }}));
   });
 
   function collectiveHeartbeat(){
@@ -182,11 +221,34 @@ window.addEventListener('DOMContentLoaded',()=>{
     });
   }
 
+  /* ══ SIGNAL: every border ignites at once, holds a beat, then breathes again ══ */
+  let signalLock=0;
+  function signalBurst(){
+    fire(1); wmGlitch(true);
+    breaths.forEach(t=>t.pause());
+    const id=++signalLock;
+    cells.forEach(c=>{
+      c.style.transition='border-color .14s ease, box-shadow .14s ease';
+      c.style.borderColor='rgba(201,156,242,0.95)';
+      c.style.boxShadow='0 0 26px rgba(201,156,242,.45) inset, 0 0 22px rgba(138,79,178,.5)';
+      c.classList.add('fired');
+    });
+    // a quick second pulse so it reads as a 'signal', then release
+    gsap.delayedCall(0.55,()=>{
+      if(id!==signalLock) return;
+      cells.forEach(c=>{ c.style.boxShadow='0 0 12px rgba(201,156,242,.22) inset'; });
+    });
+    gsap.delayedCall(0.9,()=>{
+      if(id!==signalLock) return;
+      cells.forEach(c=>{ c.classList.remove('fired'); c.style.transition=''; });
+      breaths.forEach(t=>t.resume());
+    });
+  }
+
   cells.forEach(c=> c.addEventListener('mouseenter',()=>fire(0.18)));
 
   /* ══ masthead controls ══ */
   const root=document.documentElement;
-  const GRAIN=[0, 0.42, 0.72]; let gi=1;
   document.querySelectorAll('.ctl').forEach(btn=>{
     btn.addEventListener('click',()=>{
       const k=btn.dataset.ctl;
@@ -197,14 +259,8 @@ window.addEventListener('DOMContentLoaded',()=>{
         btn.classList.toggle('is-on', on);
         wmGlitch(true); fire(0.6);
       }else if(k==='signal'){
-        fire(1); collectiveHeartbeat(); wmGlitch(true);
-        btn.classList.add('is-on'); setTimeout(()=>btn.classList.remove('is-on'),520);
-      }else if(k==='grain'){
-        gi=(gi+1)%GRAIN.length;
-        root.style.setProperty('--grit', GRAIN[gi]);
-        if(window.__entity) window.__entity.setGrit(GRAIN[gi]);
-        btn.classList.toggle('is-on', gi!==1);
-        btn.querySelector('span').textContent = gi===0?'GRAIN·0':gi===2?'GRAIN·2':'GRAIN';
+        signalBurst();
+        btn.classList.add('is-on'); setTimeout(()=>btn.classList.remove('is-on'),900);
       }
     });
   });

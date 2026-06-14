@@ -8,6 +8,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Anton&family=Geist+Mono:wght@300;400;500;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="nullrose/nullrose.css">
+<link rel="stylesheet" href="nullrose/detail.css">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
 </head>
 <body>
@@ -58,12 +59,22 @@
 
     <div class="mast-strip">
       <div class="mast-top">
-        <div>
+        <div class="mast-lead">
           <div class="sys">MACIEJ KWIATKOWSKI <span class="v">//</span> _nullrose <span class="v">//</span> gda&#324;sk</div>
-          <div class="services" data-i18n="services">design — motion — systems</div>
-          <div class="ethos" data-i18n-html="ethos"><b>purple is the verb.</b> white is the noun.</div>
+          <div class="services" data-i18n="services">Design / Video / Systems</div>
+          <blockquote class="ethos">“Beauty is nothing but the beginning of terror.”<cite>R. M. Rilke</cite></blockquote>
+          <div class="controls" role="group" aria-label="display controls">
+            <button class="ctl" data-ctl="invert" title="Invert the palette">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><circle class="ic" cx="12" cy="12" r="8"/><path class="ic-f" d="M12 4 a8 8 0 0 1 0 16 z"/></svg>
+              <span>INVERT</span>
+            </button>
+            <button class="ctl" data-ctl="signal" title="Fire a signal">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path class="ic-f" d="M12 1.5 C13 9 15 11 22.5 12 C15 13 13 15 12 22.5 C11 15 9 13 1.5 12 C9 11 11 9 12 1.5Z"/></svg>
+              <span>SIGNAL</span>
+            </button>
+          </div>
         </div>
-        <div style="display:flex;flex-direction:column;align-items:flex-end;gap:10px">
+        <div class="mast-meta">
           <div class="lang" role="group" aria-label="language">
             <button class="flag is-on" data-lang="en" aria-label="English" title="English">
               <svg viewBox="0 0 60 40" aria-hidden="true">
@@ -88,14 +99,6 @@
           <div class="barcode-code" id="barcode-code">∅0x0000·54.35N</div>
         </div>
       </div>
-      <div class="mast-foot">
-        <div class="icons">
-          <div class="ico"><svg viewBox="0 0 24 24"><circle class="ic" cx="12" cy="12" r="8"/><line class="ic" x1="6" y1="18" x2="18" y2="6"/></svg></div>
-          <div class="ico"><svg viewBox="0 0 24 24"><circle class="ic" cx="12" cy="12" r="8"/><ellipse class="ic" cx="12" cy="12" rx="3.4" ry="8"/><line class="ic" x1="4" y1="12" x2="20" y2="12"/></svg></div>
-          <div class="ico"><svg viewBox="0 0 24 24"><line class="ic" x1="12" y1="4" x2="12" y2="20"/><line class="ic" x1="5" y1="8" x2="19" y2="16"/><line class="ic" x1="19" y1="8" x2="5" y2="16"/></svg></div>
-          <div class="ico"><svg viewBox="0 0 24 24"><circle class="ic" cx="12" cy="12" r="6.5"/><line class="ic" x1="12" y1="1.5" x2="12" y2="6"/><line class="ic" x1="12" y1="18" x2="12" y2="22.5"/><line class="ic" x1="1.5" y1="12" x2="6" y2="12"/><line class="ic" x1="18" y1="12" x2="22.5" y2="12"/></svg></div>
-        </div>
-      </div>
     </div>
   </div>
 
@@ -104,14 +107,14 @@
 
     <!-- COL 1 -->
     <div class="col">
-      <div class="cell g-about">
+      <div class="cell g-about" data-cat="about">
         <div class="lab" style="--ls:30px" data-i18n="about">ABOUT</div>
         <div class="idx">[ 01 ]</div>
         <div class="sub" data-i18n="about_sub">// who is maciej</div>
         <div class="scan-line"></div>
       </div>
-      <div class="cell g-navi has-shot">
-        <div class="shot"><img src="nullrose/img/verstappen.png" alt="NaviShopper" loading="lazy"></div>
+      <div class="cell g-navi has-shot" data-cat="navishopper">
+        <div class="shot"><img src="nullrose/img/hero-navi.png" alt="NaviShopper" loading="lazy"></div>
         <div class="term-stream"><div class="term-inner" id="term-navi"></div></div>
         <div class="lab" style="--ls:30px">NAVI<br>SHOPPER</div>
         <div class="idx">[ 02 ]</div>
@@ -122,8 +125,8 @@
 
     <!-- COL 2 — hero -->
     <div class="col">
-      <div class="cell g-derm has-shot">
-        <div class="shot"><img src="nullrose/img/deftones.png" alt="Dermanium" loading="lazy"></div>
+      <div class="cell g-derm has-shot" data-cat="dermanium">
+        <div class="shot"><img src="nullrose/img/hero-derm.png" alt="Dermanium" loading="lazy"></div>
         <div class="term-stream"><div class="term-inner" id="term-derm"></div></div>
         <div class="lab" style="--ls:54px">DERMA<br>NIUM</div>
         <div class="idx">[ 03 ] HERO</div>
@@ -137,12 +140,12 @@
 
     <!-- COL 3 -->
     <div class="col">
-      <div class="cell g-mit has-shot">
-        <div class="shot"><img src="nullrose/img/ae86.png" alt="Made in Turkic" loading="lazy"></div>
+      <div class="cell g-mit has-shot" data-cat="mit">
+        <div class="shot"><img src="nullrose/img/hero-mit.png" alt="Made in Turkic" loading="lazy"></div>
         <div class="term-stream"><div class="term-inner" id="term-mit"></div></div>
         <div class="lab" style="--ls:30px">MADE IN<br>TURKIC</div>
         <div class="idx">[ 04 ]</div>
-        <div class="sub" data-i18n="mit_sub">motion</div>
+        <div class="sub" data-i18n="mit_sub">video</div>
         <div class="scan-line"></div>
       </div>
 
@@ -173,17 +176,17 @@
 
     <!-- COL 4 -->
     <div class="col">
-      <div class="cell g-contact">
+      <div class="cell g-contact" data-cat="contact">
         <div class="lab" style="--ls:26px" data-i18n="contact">CONTACT</div>
         <div class="idx">[ 05 ]</div>
         <div class="sub" data-i18n="contact_sub">// reach</div>
         <div class="scan-line"></div>
       </div>
-      <div class="cell g-arch">
+      <div class="cell g-arch" data-cat="archive">
         <div class="lab" style="--ls:26px" data-i18n="archive">ARCHIVE</div>
         <div class="idx">[ 06 ]</div>
         <div class="sub" data-i18n="archive_sub">early work</div>
-        <div class="gridblk" style="position:absolute;left:14px;right:14px;bottom:30px;height:42px">
+        <div class="gridblk" style="position:absolute;left:10px;right:10px;top:34px;bottom:5px">
           <svg viewBox="0 0 120 44" preserveAspectRatio="none" style="width:100%;height:100%">
             <line class="ds" x1="60" y1="0" x2="0"   y2="44" stroke-width=".7"/>
             <line class="ds" x1="60" y1="0" x2="24"  y2="44" stroke-width=".7"/>
@@ -198,11 +201,11 @@
         </div>
         <div class="scan-line"></div>
       </div>
-      <div class="cell g-sys">
+      <div class="cell g-sys" data-cat="systems">
         <div class="lab" style="--ls:18px" data-i18n="systems">SYSTEMS</div>
         <div class="scan-line"></div>
       </div>
-      <div class="cell g-reel">
+      <div class="cell g-reel" data-cat="showreel">
         <div class="lab" style="--ls:18px">SHOWREEL</div>
         <div class="sub" style="bottom:9px;font-size:7.5px" data-i18n="showreel_sub">▶ play</div>
         <div class="scan-line"></div>
@@ -212,17 +215,27 @@
   </div><!-- /body -->
 </div><!-- /frame -->
 
+<!-- ════ DETAIL OVERLAY (tile expands into its own space) ════ -->
+<div id="detail-layer" aria-hidden="true">
+  <div id="detail-scrim"></div>
+  <div id="detail-panel" role="dialog" aria-modal="true">
+    <button id="detail-close" aria-label="close">
+      <svg viewBox="0 0 24 24"><line x1="5" y1="5" x2="19" y2="19"/><line x1="19" y1="5" x2="5" y2="19"/></svg>
+      <span>CLOSE // ESC</span>
+    </button>
+    <div class="detail-scroll"><div class="detail-body"></div></div>
+  </div>
+</div>
+
+<script>window.__NR_ROUTING=true;</script>
+<script src="nullrose/image-slot.js"></script>
 <script src="nullrose/entity.js"></script>
 <script src="nullrose/motion.js"></script>
 <script src="nullrose/i18n.js"></script>
-
-<template id="__bundler_thumbnail">
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
-  <rect width="100" height="100" fill="#0D0D0C"/>
-  <circle cx="50" cy="50" r="22" fill="none" stroke="#B47EDE" stroke-width="3"/>
-  <line x1="36" y1="64" x2="64" y2="36" stroke="#fff" stroke-width="3"/>
-</svg>
-</template>
+<script src="nullrose/detail.js"></script>
+<script src="nullrose/archive-grid.js"></script>
+<script src="nullrose/ripple.js"></script>
+<script src="nullrose/quotes.js"></script>
 
 </body>
 </html>

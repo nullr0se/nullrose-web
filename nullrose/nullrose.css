@@ -311,6 +311,21 @@ body{
 .term-col-inner .tc{padding:0 5px}
 .term-col-inner .tc.bright{color:rgba(201,156,242,.9)}
 
+/* register strip — lines glitch on hover */
+.term-col:hover .tc{animation:tcglitch .52s steps(2,end) infinite;color:rgba(201,156,242,.85)}
+.term-col:hover .tc.bright{color:#fff}
+.term-col:hover .tc:nth-child(2n){animation-duration:.40s;animation-delay:.08s}
+.term-col:hover .tc:nth-child(3n){animation-duration:.66s;animation-delay:.14s}
+.term-col:hover .tc:nth-child(5n){animation-duration:.34s;animation-delay:.04s}
+@keyframes tcglitch{
+  0%{transform:translateX(0);text-shadow:none;clip-path:inset(0 0 0 0)}
+  18%{transform:translateX(-2px);text-shadow:2px 0 var(--purple),-2px 0 var(--lilac);clip-path:inset(0 0 62% 0)}
+  36%{transform:translateX(2px);text-shadow:-2px 0 var(--purple),2px 0 var(--lilac);clip-path:inset(54% 0 0 0)}
+  54%{transform:translateX(-1px);clip-path:inset(28% 0 40% 0)}
+  72%{transform:translateX(1px);text-shadow:1px 0 var(--lilac);clip-path:inset(0 0 0 0)}
+  100%{transform:translateX(0);text-shadow:none;clip-path:inset(0 0 0 0)}
+}
+
 /* when a slot is filled, the data-readout becomes a faint overlay on the photo */
 .has-shot:has(image-slot[data-filled]) .term-stream{opacity:.28}
 
