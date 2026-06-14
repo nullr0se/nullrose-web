@@ -148,6 +148,10 @@ body{
 .date{font-size:9px;letter-spacing:.3em;color:rgba(180,126,222,.5);white-space:nowrap}
 
 /* invert / negative mode is driven inline from JS (engine wedges filter transitions from none) */
+/* counter-invert media so images and videos show their original colours in white mode */
+html.invert img,
+html.invert video,
+html.invert canvas { filter: invert(1) hue-rotate(180deg); }
 
 /* ── language toggle: purple-duotone flag chips ── */
 .lang{display:flex;gap:7px;align-items:center}
