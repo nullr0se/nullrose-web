@@ -257,8 +257,10 @@
   const DR=n=> (window.__resources && window.__resources['derm/'+n]) || DERM+n+(/\.(png|jpe?g|webp)$/i.test(n)?'':'.jpg');
   const DERM_SECTIONS=[
     {id:'A',name:'Brand Store',note:'storefront product tiles',grid:'shop',ar:'3 / 4',items:[
-      ['shop-aha','AHA Exfoliating',null,null,'aha'],['shop-hyalu','Hyaluronic Acid',null,null,'hyalu'],['shop-col','Collagen'],['shop-vitc','Vitamin C'],
+      ['shop-col','Collagen'],['shop-vitc','Vitamin C'],
       ['shop-eye','Eye Contour'],['shop-pore','Pores Care'],['shop-ozo','Ozonized'],['shop-sal','Salmon']]},
+    {id:'A2',name:'Product Videos',note:'short-form product clips',grid:'derm-vids',ar:'3 / 4',items:[
+      ['shop-aha','AHA Exfoliating',null,null,'aha'],['shop-hyalu','Hyaluronic Acid',null,null,'hyalu']]},
     {id:'B',name:'08 March · Women\u2019s Day',note:'wide banner + 3 stories',grid:'stories',ar:'9 / 16',items:[
       ['mar8-banner','Cellular Care · March 8','span-full','2 / 1'],
       ['mar8-story1','Generations'],['mar8-story2','Skin Memory'],['mar8-story3','Every Day']]},
