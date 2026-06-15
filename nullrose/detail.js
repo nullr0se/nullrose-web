@@ -259,7 +259,7 @@
     {id:'A',name:'Brand Store',note:'storefront product tiles',grid:'shop',ar:'3 / 4',items:[
       ['shop-col','Collagen'],['shop-vitc','Vitamin C'],
       ['shop-eye','Eye Contour'],['shop-pore','Pores Care'],['shop-ozo','Ozonized'],['shop-sal','Salmon']]},
-    {id:'A2',name:'Product Videos',note:'short-form product clips',grid:'derm-vids',ar:'3 / 4',items:[
+    {id:'A2',name:'Product Videos',note:'short-form product clips',grid:'derm-vids',ar:'16 / 9',items:[
       ['shop-aha','AHA Exfoliating',null,null,'aha'],['shop-hyalu','Hyaluronic Acid',null,null,'hyalu']]},
     {id:'B',name:'08 March · Women\u2019s Day',note:'wide banner + 3 stories',grid:'stories',ar:'9 / 16',items:[
       ['mar8-banner','Cellular Care · March 8','span-full','2 / 1'],
