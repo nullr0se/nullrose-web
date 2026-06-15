@@ -631,7 +631,10 @@
   body.addEventListener('click',e=>{
     const card=e.target.closest('.derm-card, .gcard.arch, .sys-pg'); if(!card) return;
     if(card.classList.contains('vid-card')){
-      const v=card.querySelector('video'); if(v){ v.paused?v.play():v.pause(); }
+      const v=card.querySelector('video'); if(!v) return;
+      if(v.requestFullscreen) v.requestFullscreen();
+      else if(v.webkitRequestFullscreen) v.webkitRequestFullscreen();
+      v.play();
       return;
     }
     lbOpen(card);
