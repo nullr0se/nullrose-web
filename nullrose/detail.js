@@ -117,6 +117,7 @@
         p3:`<b>Nullrose</b> is a new opening: me saying goodbye to my old life and white-collar work. It's independence, and a bold new direction in this ever-shifting world of visual media. In time, I hope it becomes a recognised mark of quality, and I'd love for you to be part of it.`,
         discH:'Disciplines', disc:['Brand identity','Motion / title design','Design systems','Art direction','Packaging'],
         cliH:'Selected work', cli:['NaviShopper','Dermanium','Made in Turkic','+ studio work'],
+        toolH:'Tools', tools:['Photoshop','Illustrator','After Effects','Premiere Pro','Figma','AI tools'],
         linkH:'Elsewhere'},
       pl:{kicker:'PROFIL', title:'O MNIE', meta:'Maciej Kwiatkowski · Gdańsk, PL', tag:'MACIEJ // GDAŃSK',
         h1:'Kim jestem?',
@@ -126,6 +127,7 @@
         p3:`<b>Nullrose</b> to nowe otwarcie: pożegnanie z dawnym życiem i pracą za biurkiem. To niezależność i odważny, nowy kierunek w ciągle zmieniającym się świecie mediów wizualnych. Mam nadzieję, że z czasem stanie się rozpoznawalnym znakiem jakości. I bardzo bym chciał, żebyś był tego częścią.`,
         discH:'Specjalizacje', disc:['Identyfikacja wizualna','Motion / napisy','Systemy projektowe','Kierownictwo artystyczne','Opakowania'],
         cliH:'Wybrane prace', cli:['NaviShopper','Dermanium','Made in Turkic','+ prace studyjne'],
+        toolH:'Narzędzia', tools:['Photoshop','Illustrator','After Effects','Premiere Pro','Figma','Narzędzia AI'],
         linkH:'Gdzie indziej'}
     },
     contact:{
@@ -408,6 +410,7 @@
           <div class="about-cols">
             <div><h4>${a.discH}</h4><ul>${a.disc.map(x=>`<li>${x}</li>`).join('')}</ul></div>
             <div><h4>${a.cliH}</h4><ul>${a.cli.map(x=>`<li>${x}</li>`).join('')}</ul></div>
+            <div><h4>${a.toolH}</h4><ul>${a.tools.map(x=>`<li>${x}</li>`).join('')}</ul></div>
             <div><h4>${a.linkH}</h4><ul><li><a href="${LINKEDIN}" target="_blank" rel="noopener">LinkedIn ↗</a></li></ul></div>
           </div>
         </div>
