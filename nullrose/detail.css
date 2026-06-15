@@ -415,7 +415,8 @@
 
 .derm-grid{display:grid;gap:14px}
 .grid-shop{grid-template-columns:repeat(4,1fr)}
-.grid-derm-vids{grid-template-columns:1fr}
+.grid-derm-vids{grid-template-columns:1fr;max-width:520px;margin:0 auto}
+.grid-derm-vids .derm-card.vid-card video{object-fit:contain;background:#08080b}
 .grid-stories{grid-template-columns:repeat(3,1fr)}
 .grid-mom{grid-template-columns:repeat(3,1fr)}
 .grid-prod{grid-template-columns:repeat(4,1fr)}
