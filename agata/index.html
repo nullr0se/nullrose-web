@@ -101,7 +101,7 @@
       <canvas id="wheel" width="600" height="600"></canvas>
       <div class="wheel-pointer"></div>
     </div>
-    <button class="spin-btn" id="spinBtn" onclick="spin()">▶ spin</button>
+    <button class="spin-btn" id="spinBtn" onclick="spin()">&#9654; spin</button>
     <div class="result">
       <div class="result-label" id="resultLabel" style="display:none">tonight we watch</div>
       <div class="result-title" id="resultTitle"></div>
@@ -121,7 +121,7 @@
 </div>
 
 <script>
-  const API = '/api/watchlist';
+  const DB = 'https://kreciolek-91e3a-default-rtdb.europe-west1.firebasedatabase.app/watchlist.json';
   const USER_KEY = 'nr-watch-user';
   let movies = [], currentUser = localStorage.getItem(USER_KEY) || 'M';
   let spinning = false, rotation = 0, saving = false;
@@ -136,8 +136,9 @@
 
   async function load() {
     try {
-      const r = await fetch(API);
-      movies = await r.json();
+      const r = await fetch(DB);
+      const d = await r.json();
+      movies = d || [];
       status(''); renderList(); drawWheel();
     } catch(e) { status('sync error'); }
   }
@@ -146,7 +147,7 @@
     if (saving) return;
     saving = true; status('saving...');
     try {
-      await fetch(API, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(movies) });
+      await fetch(DB, { method: 'PUT', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(movies) });
       status('');
     } catch(e) { status('save error'); }
     saving = false;
@@ -208,13 +209,13 @@
       ctx.fillStyle=i===hi?'#fff':'rgba(255,255,255,.75)';
       let lab=m.name;
       while(ctx.measureText(lab).width>maxW&&lab.length>2) lab=lab.slice(0,-1);
-      if(lab!==m.name) lab=lab.slice(0,-1)+'…';
+      if(lab!==m.name) lab=lab.slice(0,-1)+'\u2026';
       ctx.fillText(lab,r*.62,0); ctx.restore();
     });
     ctx.beginPath(); ctx.arc(cx,cy,18,0,Math.PI*2); ctx.fillStyle='#0D0D0C'; ctx.fill();
     ctx.strokeStyle='rgba(180,126,222,.4)'; ctx.lineWidth=1.5; ctx.stroke();
     ctx.fillStyle='rgba(201,156,242,.8)'; ctx.font='500 11px Geist Mono,monospace';
-    ctx.textAlign='center'; ctx.textBaseline='middle'; ctx.fillText('∅',cx,cy);
+    ctx.textAlign='center'; ctx.textBaseline='middle'; ctx.fillText('\u2205',cx,cy);
   }
 
   function spin() {
