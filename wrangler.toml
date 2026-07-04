@@ -1,12 +1,8 @@
 name = "nullrose-main"
 compatibility_date = "2025-01-01"
 
-[[kv_namespaces]]
-binding = "WATCHLIST"
-id = "9f6e1bb9377742258a7aac5d8daf8ef6"
-
 [build]
-command = "mkdir -p dist && cp -r index.html nullrose pl agata README.md .nojekyll dist/ && cp _worker.js dist/_worker.js"
+command = "mkdir -p dist && cp -r index.html nullrose pl agata README.md .nojekyll dist/"
 
 [assets]
 directory = "./dist"
