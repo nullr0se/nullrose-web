@@ -2,7 +2,7 @@ name = "nullrose-main"
 compatibility_date = "2025-01-01"
 
 [build]
-command = "mkdir -p dist && cp -r index.html nullrose pl README.md .nojekyll dist/"
+command = "mkdir -p dist && cp -r index.html nullrose pl agata README.md .nojekyll dist/"
 
 [assets]
 directory = "./dist"
