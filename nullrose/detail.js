@@ -423,19 +423,7 @@
     const h={idx:d.idx,kicker:c.kicker,title:c.title,meta:c.meta};
     return head(h)+`
       <div class="contact-wrap">
-        <p class="contact-intro">${c.intro}</p>
-        <form class="contact-form" id="cf" novalidate>
-          <div class="cf-grid">
-            <input class="cf-in" name="name" type="text" placeholder="${c.fName}" autocomplete="name">
-            <input class="cf-in" name="email" type="email" placeholder="${c.fEmail}" autocomplete="email">
-          </div>
-          <textarea class="cf-in cf-area" name="msg" rows="4" placeholder="${c.fMsg}"></textarea>
-          <button class="cf-send" type="submit">${c.send}</button>
-          <div class="cf-status" id="cf-status" aria-live="polite"></div>
-        </form>
-        <div class="contact-or">${c.or}</div>
         <a class="big-email" href="mailto:mk@nullrose.com">mk@nullrose.com</a>
-        <div class="cf-plaintext">mk@nullrose.com</div>
         <div class="contact-rows">
           <a href="${LINKEDIN}" target="_blank" rel="noopener"><span class="ch-name">LinkedIn</span><span class="ch-h">/maciej-kwiatkowski ↗</span></a>
         </div>
