@@ -14,7 +14,7 @@
       -webkit-font-smoothing: antialiased;
     }
     .frame { max-width: 560px; margin: 0 auto; }
-    .header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 40px; }
+    .header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 32px; }
     .logo { display: flex; align-items: center; gap: 9px; font-size: 10px; letter-spacing: .28em; text-transform: uppercase; color: rgba(180,126,222,.6); }
     .who { display: flex; gap: 7px; }
     .who-btn {
@@ -23,9 +23,21 @@
       padding: 7px 14px; cursor: pointer; border-radius: 20px; transition: all .18s;
     }
     .who-btn:hover { border-color: rgba(180,126,222,.6); color: #C99CF2; }
-    .who-btn.active { border-color: #C99CF2; background: rgba(138,79,178,.22); color: #fff; }
     .who-btn.active.m { border-color: #7ec8e3; background: rgba(126,200,227,.12); color: #7ec8e3; }
     .who-btn.active.a { border-color: #e37eb4; background: rgba(227,126,180,.12); color: #e37eb4; }
+    .mode-tabs { display: flex; margin-bottom: 36px; border: 1px solid rgba(180,126,222,.22); }
+    .mode-tab {
+      flex: 1; appearance: none; background: transparent; border: none;
+      font-family: inherit; font-size: 9px; letter-spacing: .24em; text-transform: uppercase;
+      color: rgba(180,126,222,.4); padding: 11px 0; cursor: pointer; transition: all .2s; position: relative;
+    }
+    .mode-tab + .mode-tab { border-left: 1px solid rgba(180,126,222,.22); }
+    .mode-tab:hover { color: rgba(180,126,222,.8); background: rgba(138,79,178,.05); }
+    .mode-tab.active { color: #C99CF2; background: rgba(138,79,178,.12); }
+    .mode-tab.active::after {
+      content: ""; position: absolute; bottom: -1px; left: 20%; right: 20%; height: 1px;
+      background: #C99CF2; box-shadow: 0 0 8px rgba(201,156,242,.6);
+    }
     .wheel-wrap { display: flex; flex-direction: column; align-items: center; gap: 22px; margin-bottom: 48px; }
     .wheel-outer { position: relative; width: clamp(240px,52vw,300px); height: clamp(240px,52vw,300px); }
     canvas#wheel { width: 100%; height: 100%; display: block; }
@@ -96,6 +108,11 @@
     </div>
   </div>
 
+  <div class="mode-tabs">
+    <button class="mode-tab active" id="tab-movies" onclick="setMode('movies')">&#9632; movies</button>
+    <button class="mode-tab" id="tab-shows" onclick="setMode('shows')">&#9644; tv shows</button>
+  </div>
+
   <div class="wheel-wrap">
     <div class="wheel-outer">
       <canvas id="wheel" width="600" height="600"></canvas>
@@ -112,8 +129,8 @@
   <hr>
   <div class="sync-status" id="syncStatus">loading...</div>
   <div class="add-row">
-    <input class="add-input" id="addInput" type="text" placeholder="add a movie or series..." maxlength="80" onkeydown="if(event.key==='Enter') addMovie()">
-    <button class="add-btn" onclick="addMovie()">+ add</button>
+    <input class="add-input" id="addInput" type="text" placeholder="add a movie..." maxlength="80" onkeydown="if(event.key==='Enter') addItem()">
+    <button class="add-btn" onclick="addItem()">+ add</button>
   </div>
   <div class="movie-list" id="movieList"></div>
   <div class="empty" id="emptyMsg">nothing here yet &#9825;</div>
@@ -121,10 +138,18 @@
 </div>
 
 <script>
-  const DB = 'https://kreciolek-91e3a-default-rtdb.europe-west1.firebasedatabase.app/watchlist.json';
+  const DB_BASE = 'https://kreciolek-91e3a-default-rtdb.europe-west1.firebasedatabase.app';
   const USER_KEY = 'nr-watch-user';
-  let movies = [], currentUser = localStorage.getItem(USER_KEY) || 'M';
-  let spinning = false, rotation = 0, saving = false;
+  const MODE_KEY = 'nr-watch-mode';
+
+  let lists = { movies: [], shows: [] };
+  let rotations = { movies: 0, shows: 0 };
+  let currentUser = localStorage.getItem(USER_KEY) || 'M';
+  let currentMode = localStorage.getItem(MODE_KEY) || 'movies';
+  let spinning = false, saving = false;
+
+  function items() { return lists[currentMode]; }
+  function dbUrl() { return `${DB_BASE}/${currentMode}.json`; }
 
   function setUser(u) {
     currentUser = u; localStorage.setItem(USER_KEY, u);
@@ -132,13 +157,25 @@
   }
   setUser(currentUser);
 
+  function setMode(m) {
+    currentMode = m; localStorage.setItem(MODE_KEY, m);
+    document.getElementById('tab-movies').classList.toggle('active', m === 'movies');
+    document.getElementById('tab-shows').classList.toggle('active', m === 'shows');
+    document.getElementById('addInput').placeholder = m === 'movies' ? 'add a movie...' : 'add a tv show...';
+    document.getElementById('resultLabel').style.display = 'none';
+    document.getElementById('resultTitle').classList.remove('show');
+    document.getElementById('resultWho').classList.remove('show');
+    renderList(); drawWheel();
+    load();
+  }
+
   function status(msg) { document.getElementById('syncStatus').textContent = msg; }
 
   async function load() {
     try {
-      const r = await fetch(DB);
+      const r = await fetch(dbUrl());
       const d = await r.json();
-      movies = d || [];
+      lists[currentMode] = d || [];
       status(''); renderList(); drawWheel();
     } catch(e) { status('sync error'); }
   }
@@ -147,33 +184,33 @@
     if (saving) return;
     saving = true; status('saving...');
     try {
-      await fetch(DB, { method: 'PUT', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(movies) });
+      await fetch(dbUrl(), { method: 'PUT', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(items()) });
       status('');
     } catch(e) { status('save error'); }
     saving = false;
   }
 
-  async function addMovie() {
+  async function addItem() {
     const inp = document.getElementById('addInput');
     const name = inp.value.trim(); if (!name) return;
     inp.value = '';
-    movies.push({ name, who: currentUser, id: Date.now() });
+    items().push({ name, who: currentUser, id: Date.now() });
     renderList(); drawWheel(); await save();
   }
 
-  async function removeMovie(id) {
-    movies = movies.filter(m => m.id !== id);
+  async function removeItem(id) {
+    lists[currentMode] = items().filter(m => m.id !== id);
     renderList(); drawWheel(); await save();
   }
 
   function renderList() {
     const list = document.getElementById('movieList');
-    document.getElementById('emptyMsg').style.display = movies.length ? 'none' : 'block';
-    list.innerHTML = movies.map(m => `
+    document.getElementById('emptyMsg').style.display = items().length ? 'none' : 'block';
+    list.innerHTML = items().map(m => `
       <div class="movie-item">
         <span class="badge badge-${m.who.toLowerCase()}">${m.who}</span>
         <span class="movie-name">${escHtml(m.name)}</span>
-        <button class="del-btn" onclick="removeMovie(${m.id})">&#215;</button>
+        <button class="del-btn" onclick="removeItem(${m.id})">&#215;</button>
       </div>`).join('');
   }
 
@@ -190,14 +227,16 @@
     const ctx = canvas.getContext('2d');
     const W=canvas.width, cx=W/2, cy=W/2, r=W/2-6;
     ctx.clearRect(0,0,W,W);
-    if (!movies.length) {
+    const list = items();
+    if (!list.length) {
       ctx.beginPath(); ctx.arc(cx,cy,r,0,Math.PI*2); ctx.fillStyle='#16151a'; ctx.fill();
       ctx.fillStyle='rgba(180,126,222,.35)'; ctx.font='400 13px Geist Mono,monospace';
-      ctx.textAlign='center'; ctx.textBaseline='middle'; ctx.fillText('add movies first',cx,cy); return;
+      ctx.textAlign='center'; ctx.textBaseline='middle';
+      ctx.fillText(currentMode==='movies'?'add movies first':'add shows first',cx,cy); return;
     }
-    const n=movies.length, arc=(Math.PI*2)/n;
-    movies.forEach((m,i)=>{
-      const s=rotation+i*arc-Math.PI/2, e=s+arc;
+    const n=list.length, arc=(Math.PI*2)/n, rot=rotations[currentMode];
+    list.forEach((m,i)=>{
+      const s=rot+i*arc-Math.PI/2, e=s+arc;
       ctx.beginPath(); ctx.moveTo(cx,cy); ctx.arc(cx,cy,r,s,e); ctx.closePath();
       ctx.fillStyle=i===hi?'rgba(201,156,242,.2)':segFill(m.who,i); ctx.fill();
       ctx.strokeStyle='rgba(180,126,222,.15)'; ctx.lineWidth=1.5; ctx.stroke();
@@ -219,24 +258,23 @@
   }
 
   function spin() {
-    if (spinning||!movies.length) return;
+    if (spinning||!items().length) return;
     spinning=true; document.getElementById('spinBtn').disabled=true;
     const rt=document.getElementById('resultTitle'), rw=document.getElementById('resultWho'), rl=document.getElementById('resultLabel');
     rt.classList.remove('show'); rw.classList.remove('show'); rl.style.display='none';
-    const n=movies.length, arc=(Math.PI*2)/n, ti=Math.floor(Math.random()*n);
-    // target: center of segment ti lands at angle 0 (pointer = 3 o'clock)
-    // segment i center = rotation + i*arc - π/2 + arc/2; set = 0 → rotation = π/2 - ti*arc - arc/2
+    const list=items(), n=list.length, arc=(Math.PI*2)/n, ti=Math.floor(Math.random()*n);
     const targetRot = Math.PI/2 - (ti*arc + arc/2);
-    let delta = ((targetRot - rotation) % (Math.PI*2) + Math.PI*2) % (Math.PI*2);
-    if (delta < 0.1) delta += Math.PI*2; // ensure at least one full step
+    let delta = ((targetRot - rotations[currentMode]) % (Math.PI*2) + Math.PI*2) % (Math.PI*2);
+    if (delta < 0.1) delta += Math.PI*2;
     const total = delta + (6 + Math.floor(Math.random()*5)) * Math.PI*2;
-    const dur=3600+Math.random()*800, sr=rotation, t0=performance.now();
+    const dur=3600+Math.random()*800, sr=rotations[currentMode], t0=performance.now();
+    const mode=currentMode;
     function frame(now){
       const t=Math.min((now-t0)/dur,1), e=1-Math.pow(1-t,3);
-      rotation=sr+total*e; drawWheel(t===1?ti:-1);
+      rotations[mode]=sr+total*e; drawWheel(t===1?ti:-1);
       if(t<1){requestAnimationFrame(frame);return;}
       spinning=false; document.getElementById('spinBtn').disabled=false;
-      const p=movies[ti]; rl.style.display='block';
+      const p=list[ti]; rl.style.display='block';
       rt.textContent=p.name; rw.textContent='added by '+(p.who==='M'?'Maciej':'Agata');
       rw.style.color=p.who==='M'?'#7ec8e3':'#e37eb4';
       setTimeout(()=>{rt.classList.add('show');rw.classList.add('show');},40);
@@ -244,7 +282,19 @@
     requestAnimationFrame(frame);
   }
 
-  load();
+  async function loadAll() {
+    status('loading...');
+    await Promise.all(['movies','shows'].map(async mode => {
+      try {
+        const r = await fetch(`${DB_BASE}/${mode}.json`);
+        const d = await r.json();
+        lists[mode] = d || [];
+      } catch(e) {}
+    }));
+    status(''); renderList(); drawWheel();
+  }
+
+  loadAll();
   setInterval(load, 15000);
 </script>
 </body>
