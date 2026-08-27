@@ -431,9 +431,11 @@
           </div>
           <textarea class="cf-in cf-area" name="msg" rows="4" placeholder="${c.fMsg}"></textarea>
           <button class="cf-send" type="submit">${c.send}</button>
+          <div class="cf-status" id="cf-status" aria-live="polite"></div>
         </form>
         <div class="contact-or">${c.or}</div>
         <a class="big-email" href="mailto:mk@nullrose.com">mk@nullrose.com</a>
+        <div class="cf-plaintext">mk@nullrose.com</div>
         <div class="contact-rows">
           <a href="${LINKEDIN}" target="_blank" rel="noopener"><span class="ch-name">LinkedIn</span><span class="ch-h">/maciej-kwiatkowski ↗</span></a>
         </div>
@@ -463,6 +465,7 @@
   const scroll=panel.querySelector('.detail-scroll');
   const closeBtn=document.getElementById('detail-close');
   let origin=null, openKey=null, animating=false, aboutGlitchT=null, vidObserver=null;
+  const reduceMotion=matchMedia('(prefers-reduced-motion: reduce)').matches;
 
   function teardownVideos(){ if(vidObserver){ vidObserver.disconnect(); vidObserver=null; } }
   function wireVideos(){
@@ -523,6 +526,12 @@
     gsap.set(closeBtn,{opacity:0});
 
     const pad=PAD();
+    if(reduceMotion){
+      gsap.set(scrim,{opacity:1});
+      gsap.set(panel,{top:pad,left:pad,width:window.innerWidth-2*pad,height:window.innerHeight-2*pad});
+      gsap.set(closeBtn,{opacity:1});
+      panel.classList.add('ready'); animating=false;
+    } else {
     gsap.to(scrim,{opacity:1,duration:.4,ease:'power2.out'});
     gsap.timeline({onComplete:()=>{
         panel.classList.add('ready');
@@ -534,6 +543,7 @@
       .fromTo('.detail-head, .vid-hero, .gallery, .derm-gal, .reel-stage, .reel-chapters, .about-grid, .contact-wrap',
         {opacity:0,y:22},{opacity:1,y:0,duration:.5,stagger:.06,ease:'power2.out'},'-=0.28')
       .to(closeBtn,{opacity:1,duration:.3},'-=0.4');
+    }
   }
 
   function close(){
@@ -544,17 +554,22 @@
     body.querySelectorAll('video').forEach(v=>{ try{ v.pause(); }catch(e){} });
     const r=origin.getBoundingClientRect();
     panel.classList.remove('ready');
+    const done=()=>{
+      layer.classList.remove('open'); layer.setAttribute('aria-hidden','true');
+      document.documentElement.style.overflow='';
+      if(origin) origin.classList.remove('opening');
+      body.innerHTML=''; body.style.opacity='';
+      openKey=null; origin=null; animating=false;
+    };
+    if(reduceMotion){
+      gsap.set(scrim,{opacity:0}); gsap.set(closeBtn,{opacity:0}); done();
+    } else {
     gsap.to(scrim,{opacity:0,duration:.4,ease:'power2.in'});
     gsap.to(closeBtn,{opacity:0,duration:.18});
     gsap.to(body,{opacity:0,duration:.22});
     gsap.to(panel,{top:r.top,left:r.left,width:r.width,height:r.height,duration:.5,ease:'power3.inOut',
-      onComplete:()=>{
-        layer.classList.remove('open'); layer.setAttribute('aria-hidden','true');
-        document.documentElement.style.overflow='';
-        if(origin) origin.classList.remove('opening');
-        body.innerHTML=''; body.style.opacity='';
-        openKey=null; origin=null; animating=false;
-      }});
+      onComplete:done});
+    }
   }
 
   /* keep panel full on resize while open */
@@ -649,24 +664,36 @@
     gsap.fromTo(m,{filter:'brightness(1.4)'},{filter:'brightness(1)',duration:.5,ease:'power2.out'});
   });
 
-  // contact form → open mail client, fallback to clipboard copy
-  body.addEventListener('submit',e=>{
+  // contact form → POST to /api/contact (Cloudflare Worker → Resend)
+  body.addEventListener('submit',async e=>{
     const f=e.target.closest('#cf'); if(!f) return;
     e.preventDefault();
     const g=n=>(f.querySelector('[name="'+n+'"]')?.value||'').trim();
     const name=g('name'), email=g('email'), msg=g('msg');
-    const subject=encodeURIComponent('Nullrose // '+(name||'commission'));
-    const mailBody=encodeURIComponent((msg||'')+'\n\n'+(name||'')+(email?' ('+email+')':''));
-    const mailto='mailto:mk@nullrose.com?subject='+subject+'&body='+mailBody;
-    if(window.__entity) window.__entity.fire(0.7);
+    if(!msg){ f.querySelector('[name="msg"]').focus(); return; }
     const btn=f.querySelector('.cf-send');
-    // try opening mail client
-    const a=document.createElement('a'); a.href=mailto; a.target='_blank'; a.rel='noopener';
-    document.body.appendChild(a); a.click(); document.body.removeChild(a);
-    // show feedback regardless — user may not notice if mail client opens in bg
-    const orig=btn.textContent;
-    btn.textContent='opening mail client…'; btn.disabled=true;
-    setTimeout(()=>{ btn.textContent=orig; btn.disabled=false; }, 2800);
+    const statusEl=f.querySelector('#cf-status');
+    btn.textContent='sending…'; btn.disabled=true; statusEl.textContent='';
+    try{
+      const res=await fetch('/api/contact',{
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({name,email,msg})
+      });
+      const data=await res.json();
+      if(data.ok){
+        btn.textContent='sent ✓';
+        f.querySelectorAll('.cf-in').forEach(el=>{el.value='';el.disabled=true;});
+        if(window.__entity) window.__entity.fire(0.7);
+        statusEl.textContent='';
+      } else {
+        throw new Error(data.error||'server error');
+      }
+    } catch(err){
+      btn.textContent='try again';
+      btn.disabled=false;
+      statusEl.textContent='Something went wrong — email directly: mk@nullrose.com';
+    }
   });
 
   // keep an open personal panel in sync when the language flips

@@ -1,5 +1,6 @@
 name = "nullrose-main"
 compatibility_date = "2025-01-01"
+main = "_worker.js"
 
 [build]
 command = "mkdir -p dist && cp -r index.html nullrose pl agata README.md .nojekyll dist/"

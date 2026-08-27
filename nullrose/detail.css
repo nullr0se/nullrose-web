@@ -495,3 +495,6 @@
 #derm-lb .lb-prev{left:clamp(10px,2vw,28px)}
 #derm-lb .lb-next{right:clamp(10px,2vw,28px)}
 @media(max-width:600px){#derm-lb .lb-nav{width:38px;height:38px}}
+.cf-status{font-size:11px;color:rgba(220,100,100,.85);letter-spacing:.03em;min-height:1em}
+.cf-plaintext{font-family:var(--mono);font-size:11px;letter-spacing:.08em;color:rgba(180,126,222,.55);margin-top:6px;user-select:all}
+.cf-send:disabled{opacity:.5;cursor:not-allowed;transform:none}

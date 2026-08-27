@@ -4,9 +4,15 @@
    exposes window.__entity { setGrit, setHeat, fire }
    ───────────────────────────────────────────────────────────── */
 (function(){
+  if(matchMedia('(prefers-reduced-motion: reduce)').matches){
+    document.body.classList.add('no-gl'); return;
+  }
   const canvas = document.getElementById('entity-canvas');
-  const gl = canvas.getContext('webgl', {antialias:false, alpha:false}) ||
-             canvas.getContext('experimental-webgl');
+  let gl;
+  try {
+    gl = canvas.getContext('webgl', {antialias:false, alpha:false}) ||
+         canvas.getContext('experimental-webgl');
+  } catch(e) { gl = null; }
   if(!gl){ document.body.classList.add('no-gl'); return; }
 
   const vert = `attribute vec2 a_pos; void main(){ gl_Position = vec4(a_pos,0.,1.); }`;

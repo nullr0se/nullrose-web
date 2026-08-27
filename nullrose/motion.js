@@ -139,6 +139,7 @@ function attachRev(el, fast){
 }
 
 window.addEventListener('DOMContentLoaded',()=>{
+  const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
   buildStream('term-navi',56,0.30,false);
   buildStream('term-derm',60,0.26,false);
   buildStream('term-mit', 52,0.32,false);
@@ -146,8 +147,10 @@ window.addEventListener('DOMContentLoaded',()=>{
   buildBarcode();
 
   // wireframe sphere + checker strip: rev on hover
-  attachRev(document.querySelector('.sphere-deco'));
-  attachRev(document.querySelector('.checker'));
+  if(!reduceMotion){
+    attachRev(document.querySelector('.sphere-deco'));
+    attachRev(document.querySelector('.checker'));
+  }
 
   const slash=document.getElementById('the_slash');
   const head=document.getElementById('strike_head');
@@ -156,7 +159,7 @@ window.addEventListener('DOMContentLoaded',()=>{
   const fire=(a)=>{ if(window.__entity) window.__entity.fire(a); };
   const PURP='#8A4FB2', LILAC='#C99CF2', WHITE='#FFFFFF';
 
-  if(slash && head && window.gsap){
+  if(slash && head && window.gsap && !reduceMotion){
     const TOPY=TOP, FLY=30;
     gsap.set(slash,{attr:{height:0, y:TOPY-FLY}, fill:PURP, filter:'drop-shadow(0 0 9px rgba(201,156,242,.95))', opacity:0});
     gsap.set(head,{attr:{r:0, cy:TOPY}, fill:LILAC, filter:'drop-shadow(0 0 7px rgba(201,156,242,1))'});
@@ -255,7 +258,11 @@ window.addEventListener('DOMContentLoaded',()=>{
       if(k==='invert'){
         const on=!root.classList.contains('invert');
         root.classList.toggle('invert', on);
-        document.body.style.filter = on ? 'invert(1) hue-rotate(180deg)' : '';
+        // apply only to content containers — keeps WebGL canvas, grain, and scanlines
+        // out of the compositing path so integrated GPUs don't stutter
+        const f=on?'invert(1) hue-rotate(180deg)':'';
+        document.querySelector('.frame').style.filter=f;
+        const dl=document.getElementById('detail-layer'); if(dl) dl.style.filter=f;
         btn.classList.toggle('is-on', on);
         wmGlitch(true); fire(0.6);
       }else if(k==='signal'){
