@@ -320,7 +320,7 @@
       ['apr-1','\u00dcretim Merkezi \u00b7 T\u00fcrkiye'],['apr-2','Merkez \u00b7 Azerbaijan'],
       ['apr-3','B\u00fcy\u00fcyen Pazar \u00b7 Central Asia'],['apr-chart','48M$ Net Gelir Hedefi']]},
     {id:'B',name:'Instagram Carousel',note:'teaser narrative',grid:'mom',ar:'1 / 1',items:[
-      ['ig-1','\u0130pek Yolu\u2019nun Miras\u0131'],['ig-3','Global Ticaretin Gelece\u011fi'],['ig-2','Coming Soon']]},
+      ['ig-1','\u0130pek Yolu\u2019nun Miras\u0131'],['ig-2','Coming Soon'],['ig-3','Global Ticaretin Gelece\u011fi']]},
   ];
   function renderMit(d){
     let secs='';
