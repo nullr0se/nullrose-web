@@ -29,8 +29,10 @@
   }
   const POSTERS=['deftones','verstappen','dream','ae86','digital-escape'];
   // standalone-aware: prefer an inlined blob URL (window.__resources) when present
+  const WEBP=typeof document!=='undefined'&&document.createElement('canvas').toDataURL('image/webp').startsWith('data:image/webp');
+  const ext=(base,orig)=>WEBP?(base+'.webp'):(base+orig);
   const P=n=>{ const name=POSTERS[n%POSTERS.length];
-    return (window.__resources && window.__resources[name]) || IMG+name+'.png'; };
+    return (window.__resources && window.__resources[name]) || ext(IMG+name,'.png'); };
 
   /* ── category data (placeholder copy) ── */
   const CAT={
@@ -191,7 +193,7 @@
 
   /* ── ARCHIVE: real selected commissions (true-colour on hover) ── */
   const ARCHB=BASE+'nullrose/img/arch/';
-  const AR=n=> (window.__resources && window.__resources['arch/'+n]) || ARCHB+n+'.png';
+  const AR=n=> (window.__resources && window.__resources['arch/'+n]) || ext(ARCHB+n,'.png');
   const ARCHIVE_ITEMS=[
     {file:'gig-extra',     t:'Extraterrestial Destruction', t_pl:'Extraterrestial Destruction',
       type:'gig poster',   type_pl:'plakat koncertowy', y:'2025'},
@@ -210,7 +212,7 @@
       const title=pl?it.t_pl:it.t, type=pl?it.type_pl:it.type;
       cards+=`<div class="gcard arch" data-full="${AR(it.file)}" data-label="${title}" data-pulse>
         <span class="num">${num}</span>
-        <img src="${AR(it.file)}" alt="${title}">
+        <img src="${AR(it.file)}" alt="${title}" loading="lazy" decoding="async">
         <div class="gcap"><span class="t">${title}</span><span class="y">${type} · ${it.y}</span></div>
       </div>`;
     });
@@ -219,7 +221,7 @@
 
   /* ── SYSTEMS: brand books as page-stacks that fan open ── */
   const SYSB=BASE+'nullrose/img/sys/';
-  const SY=(book,n)=> (window.__resources && window.__resources['sys/'+book+'/'+n]) || SYSB+book+'/'+n+'.jpg';
+  const SY=(book,n)=> (window.__resources && window.__resources['sys/'+book+'/'+n]) || ext(SYSB+book+'/'+n,'.jpg');
   const SYSTEMS=[
     {book:'derm', name:'Dermanium',     sub:'brand book',        sub_pl:'księga marki',      pages:26, tone:'#7ac943'},
     {book:'mit',  name:'Made in Turkic',sub:'brand book',        sub_pl:'księga marki',      pages:24, tone:'#23a6b8'},
@@ -256,7 +258,7 @@
   }
 
   const DERM=BASE+'nullrose/img/derm/';
-  const DR=n=> (window.__resources && window.__resources['derm/'+n]) || DERM+n+(/\.(png|jpe?g|webp)$/i.test(n)?'':'.jpg');
+  const DR=n=> (window.__resources && window.__resources['derm/'+n]) || (()=>{ const b=DERM+n+(/\.(png|jpe?g|webp)$/i.test(n)?'':'.jpg'); return WEBP?b.replace(/\.(png|jpe?g)$/i,'.webp'):b; })();
   const DERM_SECTIONS=[
     {id:'A',name:'Brand Store',note:'storefront product tiles',grid:'shop',ar:'3 / 4',items:[
       ['shop-col','Collagen'],['shop-vitc','Vitamin C'],
@@ -312,7 +314,7 @@
 
   /* ── MADE IN TURKIC: campaign + social, grouped by family ── */
   const MITB=BASE+'nullrose/img/mit/';
-  const MR=n=> (window.__resources && window.__resources['mit/'+n]) || MITB+n+'.jpg';
+  const MR=n=> (window.__resources && window.__resources['mit/'+n]) || ext(MITB+n,'.jpg');
   const MIT_SECTIONS=[
     {id:'A',name:'April Campaign',note:'three-pillar geography story',grid:'prod',ar:'4 / 5',items:[
       ['apr-1','\u00dcretim Merkezi \u00b7 T\u00fcrkiye'],['apr-2','Merkez \u00b7 Azerbaijan'],
@@ -347,7 +349,7 @@
 
   /* ── NAVISHOPPER: instagram carousels (real client decks) ── */
   const NAVB=BASE+'nullrose/img/navi/';
-  const NV=n=> (window.__resources && window.__resources['navi/'+n]) || NAVB+n+'.png';
+  const NV=n=> (window.__resources && window.__resources['navi/'+n]) || ext(NAVB+n,'.png');
   const NAVI_SECTIONS=[
     {id:'A',name:'E-Commerce Management',name_pl:'Zarządzanie e-commerce',
       note:'instagram carousel',note_pl:'karuzela na instagramie',ar:'4 / 5',items:[
@@ -372,7 +374,7 @@
         const lab=pl&&label_pl?label_pl:label;
         cards+=`<figure class="derm-card" style="aspect-ratio:${s.ar}" data-full="${NV(file)}" data-label="${lab}" data-pulse>
           <span class="num">${String(i+1).padStart(2,'0')}</span>
-          <img src="${NV(file)}" alt="${lab}">
+          <img src="${NV(file)}" alt="${lab}" loading="lazy" decoding="async">
           <figcaption class="derm-cap"><span>${lab}</span><b>\u2197</b></figcaption>
         </figure>`;
       });
@@ -395,9 +397,9 @@
     return head(h)+`
       <div class="about-grid">
         <div class="about-portrait">
-          <img class="gp-base" src="${IMG}mk.jpg" alt="Maciej Kwiatkowski">
-          <img class="gp-slice gp-r" src="${IMG}mk.jpg" alt="" aria-hidden="true">
-          <img class="gp-slice gp-g" src="${IMG}mk.jpg" alt="" aria-hidden="true">
+          <img class="gp-base" src="${ext(IMG+'mk','.jpg')}" alt="Maciej Kwiatkowski">
+          <img class="gp-slice gp-r" src="${ext(IMG+'mk','.jpg')}" alt="" aria-hidden="true">
+          <img class="gp-slice gp-g" src="${ext(IMG+'mk','.jpg')}" alt="" aria-hidden="true">
           <span class="gp-scan"></span>
           <span class="tag">${a.tag}</span>
         </div>
@@ -647,16 +649,24 @@
     gsap.fromTo(m,{filter:'brightness(1.4)'},{filter:'brightness(1)',duration:.5,ease:'power2.out'});
   });
 
-  // contact form → compose an email to mk@nullrose.com (static-site friendly)
+  // contact form → open mail client, fallback to clipboard copy
   body.addEventListener('submit',e=>{
     const f=e.target.closest('#cf'); if(!f) return;
     e.preventDefault();
     const g=n=>(f.querySelector('[name="'+n+'"]')?.value||'').trim();
     const name=g('name'), email=g('email'), msg=g('msg');
     const subject=encodeURIComponent('Nullrose // '+(name||'commission'));
-    const body=encodeURIComponent((msg||'')+'\n\n'+(name||'')+(email?' ('+email+')':''));
+    const mailBody=encodeURIComponent((msg||'')+'\n\n'+(name||'')+(email?' ('+email+')':''));
+    const mailto='mailto:mk@nullrose.com?subject='+subject+'&body='+mailBody;
     if(window.__entity) window.__entity.fire(0.7);
-    location.href='mailto:mk@nullrose.com?subject='+subject+'&body='+body;
+    const btn=f.querySelector('.cf-send');
+    // try opening mail client
+    const a=document.createElement('a'); a.href=mailto; a.target='_blank'; a.rel='noopener';
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    // show feedback regardless — user may not notice if mail client opens in bg
+    const orig=btn.textContent;
+    btn.textContent='opening mail client…'; btn.disabled=true;
+    setTimeout(()=>{ btn.textContent=orig; btn.disabled=false; }, 2800);
   });
 
   // keep an open personal panel in sync when the language flips

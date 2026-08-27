@@ -178,8 +178,14 @@
   window.addEventListener('resize',resize); resize();
 
   const t0=performance.now();
-  function loop(){
-    const t=(performance.now()-t0)*0.001;
+  const FPS=30, FRAME_MS=1000/FPS;
+  let lastFrame=0, hidden=false;
+  document.addEventListener('visibilitychange',()=>{ hidden=document.hidden; });
+  function loop(now){
+    requestAnimationFrame(loop);
+    if(hidden || now-lastFrame < FRAME_MS) return;
+    lastFrame=now;
+    const t=(now-t0)*0.001;
     state.ptr.x+=(state.ptrT.x-state.ptr.x)*0.04;
     state.ptr.y+=(state.ptrT.y-state.ptr.y)*0.04;
     state.fire*=0.93;
@@ -190,9 +196,8 @@
     gl.uniform1f(U.heat,state.heat);
     gl.uniform1f(U.fire,state.fire);
     gl.drawArrays(gl.TRIANGLE_STRIP,0,4);
-    requestAnimationFrame(loop);
   }
-  loop();
+  requestAnimationFrame(loop);
 
   window.__entity={
     setGrit:v=>state.grit=v,
