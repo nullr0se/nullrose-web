@@ -30,7 +30,13 @@ export default {
       }
     }
 
-    return env.ASSETS.fetch(request);
+    const res = await env.ASSETS.fetch(request);
+    if (/^\/(rate|agata)(\/|$)/.test(url.pathname)) {
+      const h = new Headers(res.headers);
+      h.set('X-Robots-Tag', 'noindex, nofollow');
+      return new Response(res.body, { status: res.status, headers: h });
+    }
+    return res;
   },
 };
 
