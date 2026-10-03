@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="pl"><head><meta charset="utf-8"><title>Walk-in B: jeden widok, dwie kolumny</title>
+<link rel="stylesheet" href="walkin.css">
+<script src="https://unpkg.com/lucide@0.460.0/dist/umd/lucide.min.js"></script>
+<style>
+.wk{display:grid;grid-template-columns:360px minmax(0,1fr);min-height:460px}
+.side{padding:20px 24px;border-right:1px solid var(--line);display:flex;flex-direction:column;gap:18px;background:#FBFAF8;border-radius:12px 0 0 12px}
+.step{display:flex;align-items:center;gap:10px;font-weight:600}
+.step i.n{font-style:normal;width:24px;height:24px;border-radius:50%;display:grid;place-items:center;font-size:13px;background:var(--ink);color:#fff}
+.step.dim{color:var(--ink-3)}.step.dim i.n{background:#D6D3CB}
+.out{display:flex;justify-content:space-between;padding:12px 14px;background:#fff;border:1px solid var(--line);border-radius:var(--r);font-size:14px}
+.out b{font-weight:600}
+.stepper{width:100%}.stepper output{flex:1}
+.date-btn{width:100%}
+.picked{display:grid;grid-template-columns:1fr 1fr;gap:10px 16px;padding:14px;background:#fff;border:1px solid var(--accent);border-radius:var(--r);font-size:14px}
+.picked span{display:block;color:var(--ink-3);font-size:13px}.picked b{font-weight:600}
+.hint{padding:14px;border:1px dashed var(--line-2);border-radius:var(--r);color:var(--ink-3);font-size:14px}
+table.rooms{width:100%;border-collapse:collapse;font-size:15px}
+table.rooms th{text-align:left;font-weight:600;color:var(--ink-2);font-size:13px;padding:10px 16px;border-bottom:1px solid var(--line)}
+table.rooms td{padding:14px 16px;border-bottom:1px solid var(--line)}
+table.rooms tbody.av tr{cursor:pointer}
+table.rooms tbody.av tr:hover td{background:#F7F8FD}
+table.rooms tr.sel td{background:var(--accent-soft)!important}
+table.rooms tr.sel td:first-child{box-shadow:inset 3px 0 0 var(--accent)}
+table.rooms tbody.un td{color:var(--ink-2);font-size:14px;padding:10px 16px;background:#FAF9F6}
+.no{font-size:18px;font-weight:700}
+.grp td{padding:0!important;background:none!important}
+.grp button{display:flex;align-items:center;gap:10px;width:100%;padding:14px 16px;border:0;background:#FAF9F6;font-weight:600;color:var(--ink-2);text-align:left}
+.grp button:hover{background:#F3F2EE}
+</style></head>
+<body>
+<header class="app-head" id="head"></header>
+<div class="owner" id="owner"></div>
+<main class="page">
+<section class="card wk" id="walkin"></section>
+<section class="card" id="res"></section>
+</main>
+<div class="variant-badge">Wariant B: jeden widok, dwie kolumny</div>
+<script src="walkin.js"></script>
+<script>
+const q = { from: WI.TODAY, nights: 2, guests: 1 };
+let sel = null, showUn = false, draft = {};
+const $ = s => document.querySelector(s);
+function stepper(key, val, min, max, label, unit) {
+  return `<div class="field"><span class="label">${label}</span><div class="stepper"><button data-step="${key}" data-d="-1" ${val <= min ? 'disabled' : ''} aria-label="Mniej"><i data-lucide="minus"></i></button><output>${val} ${unit}</output><button data-step="${key}" data-d="1" ${val >= max ? 'disabled' : ''} aria-label="Więcej"><i data-lucide="plus"></i></button></div></div>`;
+}
+function renderWalkin() {
+  const r = WI.search(q);
+  const pick = sel && r.available.find(a => a.room.id === sel);
+  if (sel && !pick) sel = null;
+  $('#walkin').innerHTML = `
+  <aside class="side">
+    <div class="step"><i class="n">1</i>Termin i goście</div>
+    <div class="field"><span class="label">Przyjazd</span><button class="date-btn" id="dateBtn"><i data-lucide="calendar"></i>${WI.fmt(q.from)}</button></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">${stepper('nights', q.nights, 1, 30, 'Noce', '')}${stepper('guests', q.guests, 1, 6, 'Osoby', '')}</div>
+    <div class="out"><span class="muted">Wyjazd</span><b>${WI.fmt(r.end)}, ${q.nights} ${WI.nightsWord(q.nights)}</b></div>
+    <div class="step ${pick ? '' : 'dim'}" style="margin-top:6px"><i class="n">2</i>Dane gościa</div>
+    ${pick ? `<div class="picked"><div><span>Pokój</span><b>${pick.room.id}, ${pick.room.type}</b></div><div><span>Osoby</span><b>${q.guests}</b></div><div><span>Termin</span><b>${WI.fmt(q.from)} do ${WI.fmt(r.end)}</b></div><div><span>Suma</span><b style="font-size:17px">${WI.pln(pick.total)}</b></div></div>
+    <form id="gForm" style="display:flex;flex-direction:column;gap:12px">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px"><label class="field"><span class="label">Imię</span><input class="input" name="first" required value="${draft.first || ''}"></label><label class="field"><span class="label">Nazwisko</span><input class="input" name="last" required value="${draft.last || ''}"></label></div>
+      <label class="field"><span class="label">Telefon</span><input class="input" name="phone" required placeholder="+48 600 000 000" value="${draft.phone || ''}"></label>
+      <label class="field"><span class="label">E-mail (opcjonalnie)</span><input class="input" name="email" type="email" value="${draft.email || ''}"></label>
+      <div style="display:flex;gap:10px;margin-top:4px"><button class="btn" type="button" id="cancel">Anuluj</button><button class="btn primary" style="flex:1;justify-content:center" type="submit"><i data-lucide="check"></i>Zarezerwuj pokój ${pick.room.id}</button></div>
+    </form>` : `<div class="hint">Wybierz pokój z listy po prawej. Termin, liczba osób i suma uzupełnią się same.</div>`}
+  </aside>
+  <div>
+    <div style="display:flex;align-items:baseline;justify-content:space-between;padding:20px 20px 12px"><h2 class="h2">Walk-in: dostępne przez cały pobyt</h2><span class="muted">${r.available.length} z ${WI.state.rooms.length} pokoi</span></div>
+    <table class="rooms"><thead><tr><th>Pokój</th><th>Typ</th><th>Pojemność</th><th>Gotowość</th><th style="text-align:right">Cena za noc</th><th style="text-align:right">Suma za pobyt</th><th></th></tr></thead>
+    <tbody class="av">${r.available.length ? r.available.map(a => `<tr data-room="${a.room.id}" class="${sel === a.room.id ? 'sel' : ''}">
+      <td><span class="no">${a.room.id}</span><div class="muted" style="font-size:13px">piętro ${a.room.floor}</div></td>
+      <td>${a.room.type}${a.best ? '<div class="tag" style="margin-top:2px"><i data-lucide="star"></i>Najlepsze dopasowanie</div>' : ''}</td>
+      <td><span style="display:inline-flex;align-items:center;gap:6px"><i data-lucide="users"></i>do ${a.room.cap} os.</span></td>
+      <td><span class="status ${a.ready.k}"><i data-lucide="${a.ready.icon}"></i>${a.ready.t}</span></td>
+      <td style="text-align:right">${WI.pln(a.room.price)}</td><td style="text-align:right" class="price"><span style="font-size:17px">${WI.pln(a.total)}</span></td>
+      <td style="text-align:right"><button class="btn sm ${sel === a.room.id ? 'primary' : ''}">${sel === a.room.id ? 'Wybrany' : 'Wybierz'}</button></td></tr>`).join('') : `<tr><td colspan="7" style="color:var(--ink-2)"><b>Brak pokoi dostępnych przez cały pobyt.</b> Zmień liczbę nocy, osób lub datę przyjazdu.</td></tr>`}</tbody>
+    <tbody><tr class="grp"><td colspan="7"><button id="unToggle"><i data-lucide="${showUn ? 'chevron-down' : 'chevron-right'}"></i>Niedostępne w tym terminie: ${r.unavailable.length}</button></td></tr></tbody>
+    ${showUn ? `<tbody class="un">${r.unavailable.map(u => `<tr><td><b>${u.room.id}</b></td><td>${u.room.type}</td><td>do ${u.room.cap} os.</td><td colspan="4"><span style="display:flex;flex-wrap:wrap;gap:6px">${u.reasons.map(x => `<span class="status ${x.k}"><i data-lucide="${x.icon}"></i>${x.t}</span>`).join('')}</span></td></tr>`).join('')}</tbody>` : ''}
+    </table>
+  </div>`;
+  $('#dateBtn').onclick = e => { e.stopPropagation(); WI.calendar(e.currentTarget, q.from, d => { q.from = d; render(); }); };
+  $('#unToggle').onclick = () => { showUn = !showUn; render(); };
+  document.querySelectorAll('[data-step]').forEach(b => b.onclick = () => { saveDraft(); q[b.dataset.step] += +b.dataset.d; render(); });
+  document.querySelectorAll('[data-room]').forEach(tr => tr.onclick = () => { saveDraft(); sel = tr.dataset.room; render(); $('#gForm [name=first]')?.focus(); });
+  if (pick) {
+    $('#cancel').onclick = () => { sel = null; draft = {}; render(); };
+    $('#gForm').onsubmit = e => { e.preventDefault(); const f = Object.fromEntries(new FormData(e.target)); const id = sel; sel = null; draft = {}; WI.book(id, q, f); };
+  }
+}
+function saveDraft() { const f = $('#gForm'); if (f) draft = Object.fromEntries(new FormData(f)); }
+function render() { WI.header($('#head')); WI.owner($('#owner')); renderWalkin(); WI.reservations($('#res')); lucide.createIcons(); }
+WI.onChange(render); WI.reset();
+</script>
+</body></html>

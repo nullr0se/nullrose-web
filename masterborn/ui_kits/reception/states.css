@@ -1,0 +1,2 @@
+:root{--st-arrival:#1971C2;--st-inhouse:#6741D9;--st-departure:#D9480F;--st-out-bg:#DEE2E6;--st-out-fg:#343A40;--st-clean:#2B8A3E;--st-service:#F59F00;--st-service-fg:#1B1E22;--st-reno:#495057;--st-blocked:#C92A2A;--tl-today:rgba(39,71,160,.08);--tl-weekend:rgba(27,30,34,.04);--tl-range:rgba(39,71,160,.13)}
+:root[data-theme="dark"]{--st-out-bg:#3A3F46;--st-out-fg:#E1E4E8;--st-reno:#6C757D;--tl-today:rgba(122,150,240,.12);--tl-weekend:rgba(255,255,255,.035);--tl-range:rgba(122,150,240,.17)}

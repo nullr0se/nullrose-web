@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="pl"><head><meta charset="utf-8"><title>Walk-in A: wyszukiwarka i karty</title>
+<link rel="stylesheet" href="walkin.css">
+<script src="https://unpkg.com/lucide@0.460.0/dist/umd/lucide.min.js"></script>
+<style>
+.q{display:flex;align-items:flex-end;gap:20px;padding:20px 24px;border-bottom:1px solid var(--line)}
+.q .out{display:flex;flex-direction:column;justify-content:flex-end;height:68px;padding-left:20px;border-left:1px solid var(--line)}
+.q .out b{font-size:16px;font-weight:600}
+.grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:16px;padding:20px 24px}
+.room{display:flex;flex-direction:column;gap:14px;text-align:left;padding:18px;border:1px solid var(--line);border-radius:12px;background:#fff;transition:border-color .12s,box-shadow .12s}
+.room:hover{border-color:var(--accent);box-shadow:0 2px 0 var(--accent-soft)}
+.room.best{border-color:var(--accent);border-width:2px;padding:17px}
+.room.sel{background:var(--accent-soft);border-color:var(--accent)}
+.room .no{font-size:28px;font-weight:700;letter-spacing:-.02em;line-height:1}
+.room .meta{display:flex;gap:14px;color:var(--ink-2);font-size:14px}
+.room .meta span{display:flex;align-items:center;gap:6px}
+.room .money{display:flex;justify-content:space-between;align-items:flex-end;padding-top:14px;border-top:1px solid var(--line)}
+.room .total{font-size:20px;font-weight:700}
+.empty{padding:28px 24px;color:var(--ink-2)}
+.un-toggle{display:flex;align-items:center;gap:10px;width:100%;padding:14px 24px;border:0;border-top:1px solid var(--line);background:#FAF9F6;font-weight:600;color:var(--ink-2);text-align:left;border-radius:0 0 12px 12px}
+.un-toggle:hover{background:#F3F2EE}
+.un-list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:0 32px;padding:4px 24px 16px;background:#FAF9F6;border-radius:0 0 12px 12px}
+.un-row{display:flex;align-items:center;gap:16px;padding:10px 0;border-bottom:1px solid var(--line);font-size:14px}
+.un-row .n{font-weight:700;width:40px;font-size:16px}
+.un-row .t{width:150px;color:var(--ink-2)}
+.drawer-bg{position:fixed;inset:0;background:rgba(20,24,30,.28);z-index:40}
+.drawer{position:fixed;top:0;right:0;bottom:0;width:440px;background:#fff;z-index:41;display:flex;flex-direction:column;box-shadow:-12px 0 32px rgba(20,24,30,.12)}
+.drawer header{display:flex;align-items:center;justify-content:space-between;padding:20px 24px;border-bottom:1px solid var(--line)}
+.drawer .sum{margin:20px 24px 0;padding:16px;background:#F7F6F2;border-radius:10px;display:grid;grid-template-columns:1fr 1fr;gap:12px 16px;font-size:14px}
+.drawer .sum div span{display:block;color:var(--ink-3);font-size:13px}
+.drawer .sum div b{font-weight:600;font-size:15px}
+.drawer form{display:flex;flex-direction:column;gap:16px;padding:20px 24px;flex:1}
+.drawer footer{display:flex;justify-content:flex-end;gap:12px;padding:16px 24px;border-top:1px solid var(--line)}
+.icon-btn{width:36px;height:36px;border:0;background:none;border-radius:8px;display:grid;place-items:center}
+.icon-btn:hover{background:#F2F1EC}
+</style></head>
+<body>
+<header class="app-head" id="head"></header>
+<div class="owner" id="owner"></div>
+<main class="page">
+<section class="card" id="walkin"></section>
+<section class="card" id="res"></section>
+</main>
+<div id="drawer"></div>
+<div class="variant-badge">Wariant A: wyszukiwarka i karty pokoi</div>
+<script src="walkin.js"></script>
+<script>
+const q = { from: WI.TODAY, nights: 2, guests: 1 };
+let sel = null, showUn = false;
+const $ = s => document.querySelector(s);
+function stepper(key, val, min, max, label, unit) {
+  return `<div class="field"><span class="label">${label}</span><div class="stepper"><button data-step="${key}" data-d="-1" ${val <= min ? 'disabled' : ''} aria-label="Mniej"><i data-lucide="minus"></i></button><output>${val} ${unit}</output><button data-step="${key}" data-d="1" ${val >= max ? 'disabled' : ''} aria-label="Więcej"><i data-lucide="plus"></i></button></div></div>`;
+}
+function renderWalkin() {
+  const r = WI.search(q);
+  $('#walkin').innerHTML = `
+  <div style="padding:20px 24px 0;display:flex;align-items:baseline;gap:12px"><h2 class="h2">Walk-in: wolne pokoje</h2><span class="muted">Podaj termin i liczbę osób, wyniki odświeżają się od razu</span></div>
+  <div class="q">
+    <div class="field"><span class="label">Przyjazd</span><button class="date-btn" id="dateBtn"><i data-lucide="calendar"></i>${WI.fmt(q.from)}</button></div>
+    ${stepper('nights', q.nights, 1, 30, 'Liczba nocy', WI.nightsWord(q.nights))}
+    ${stepper('guests', q.guests, 1, 6, 'Liczba osób', 'os.')}
+    <div class="out"><span class="muted" style="font-size:13px">Wyjazd</span><b>${WI.fmt(r.end)}</b></div>
+  </div>
+  ${r.available.length ? `<div style="padding:16px 24px 0;font-weight:600">Dostępne przez cały pobyt: ${r.available.length}</div><div class="grid">${r.available.map(a => `
+    <button class="room ${a.best ? 'best' : ''} ${sel === a.room.id ? 'sel' : ''}" data-room="${a.room.id}">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start"><div class="no">${a.room.id}</div>${a.best ? '<span class="tag"><i data-lucide="star"></i>Najlepsze dopasowanie</span>' : ''}</div>
+      <div class="meta"><span>${a.room.type}</span><span><i data-lucide="users"></i>do ${a.room.cap} os.</span><span>piętro ${a.room.floor}</span></div>
+      <span class="status ${a.ready.k}" style="align-self:flex-start"><i data-lucide="${a.ready.icon}"></i>${a.ready.t}</span>
+      <div class="money"><div><div class="muted" style="font-size:13px">${WI.pln(a.room.price)} za noc</div><div class="muted" style="font-size:13px">${q.nights} ${WI.nightsWord(q.nights)}</div></div><div class="total">${WI.pln(a.total)}</div></div>
+    </button>`).join('')}</div>` : `<div class="empty"><b>Brak pokoi dostępnych przez cały pobyt.</b> Zmień liczbę nocy, osób lub datę przyjazdu.</div>`}
+  <button class="un-toggle" id="unToggle"><i data-lucide="${showUn ? 'chevron-down' : 'chevron-right'}"></i>Niedostępne w tym terminie: ${r.unavailable.length}</button>
+  ${showUn ? `<div class="un-list">${r.unavailable.map(u => `<div class="un-row"><span class="n">${u.room.id}</span><span class="t">${u.room.type}, ${u.room.cap} os.</span><span style="display:flex;flex-wrap:wrap;gap:6px">${u.reasons.map(x => `<span class="status ${x.k}"><i data-lucide="${x.icon}"></i>${x.t}</span>`).join('')}</span></div>`).join('')}</div>` : ''}`;
+  $('#dateBtn').onclick = e => { e.stopPropagation(); WI.calendar(e.currentTarget, q.from, d => { q.from = d; sel = null; render(); }); };
+  $('#unToggle').onclick = () => { showUn = !showUn; render(); };
+  document.querySelectorAll('[data-step]').forEach(b => b.onclick = () => { q[b.dataset.step] += +b.dataset.d; sel = null; render(); });
+  document.querySelectorAll('[data-room]').forEach(b => b.onclick = () => { sel = b.dataset.room; render(); });
+}
+function renderDrawer() {
+  if (!sel) { $('#drawer').innerHTML = ''; return; }
+  const room = WI.state.rooms.find(r => r.id === sel);
+  $('#drawer').innerHTML = `<div class="drawer-bg" id="dbg"></div><aside class="drawer" role="dialog" aria-label="Dane gościa">
+    <header><h2 class="h2">Pokój ${room.id}: dane gościa</h2><button class="icon-btn" id="dClose" aria-label="Zamknij"><i data-lucide="x"></i></button></header>
+    <div class="sum"><div><span>Termin</span><b>${WI.fmt(q.from)} do ${WI.fmt(q.from + q.nights)}</b></div><div><span>Noce</span><b>${q.nights}</b></div>
+    <div><span>Pokój</span><b>${room.id}, ${room.type}</b></div><div><span>Osoby</span><b>${q.guests}</b></div>
+    <div><span>Cena za noc</span><b>${WI.pln(room.price)}</b></div><div><span>Suma</span><b style="font-size:18px">${WI.pln(room.price * q.nights)}</b></div></div>
+    <form id="gForm">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px"><label class="field"><span class="label">Imię</span><input class="input" name="first" required autofocus></label><label class="field"><span class="label">Nazwisko</span><input class="input" name="last" required></label></div>
+      <label class="field"><span class="label">Telefon</span><input class="input" name="phone" required placeholder="+48 600 000 000"></label>
+      <label class="field"><span class="label">E-mail (opcjonalnie)</span><input class="input" name="email" type="email"></label>
+    </form>
+    <footer><button class="btn" id="dCancel">Anuluj</button><button class="btn primary" type="submit" form="gForm"><i data-lucide="check"></i>Zarezerwuj pokój ${room.id}</button></footer></aside>`;
+  const close = () => { sel = null; render(); };
+  $('#dbg').onclick = close; $('#dClose').onclick = close; $('#dCancel').onclick = close;
+  $('#gForm').onsubmit = e => { e.preventDefault(); const f = Object.fromEntries(new FormData(e.target)); const id = sel; sel = null; WI.book(id, q, f); };
+  setTimeout(() => $('#gForm [name=first]')?.focus(), 0);
+}
+function render() { WI.header($('#head')); WI.owner($('#owner')); renderWalkin(); renderDrawer(); WI.reservations($('#res')); lucide.createIcons(); }
+WI.onChange(render); WI.reset();
+</script>
+</body></html>

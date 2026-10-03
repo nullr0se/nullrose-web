@@ -1,0 +1,15 @@
+<!-- @dsCard group="Components" viewport="700x300" name="Data" subtitle="DataTable with selection and sunken group" -->
+<!DOCTYPE html><html lang="pl"><head><meta charset="utf-8"><link rel="stylesheet" href="../../styles.css"><style>body{margin:0;padding:20px;font-family:var(--font-sans);color:var(--text-body);background:var(--surface-card);font-size:15px;font-variant-numeric:tabular-nums}</style><script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/lucide@0.460.0/dist/umd/lucide.min.js"></script>
+<script src="../../_ds_bundle.js"></script></head><body><div id="root"></div>
+<script type="text/babel">
+const { DataTable, StatusBadge, Button } = window.DesignSystem_2ac299;
+const rows=[{id:'202',type:'Jednoosobowy',cap:1,r:'ok',rt:'Posprzątany, gotowy',p:180,t:360},{id:'103',type:'Trzyosobowy',cap:3,r:'warn',rt:'Gotowy od ok. 14:00',p:280,t:560}];
+const un=[{id:'101',type:'Jednoosobowy',cap:1,why:'Wolny tylko do 29.12.2024'},{id:'102',type:'Dwuosobowy',cap:2,why:'Zajęty do 02.01.2025'}];
+function Demo(){const [sel,setSel]=React.useState('202');return <div style={{border:'1px solid var(--border-default)',borderRadius:12,overflow:'hidden'}}>
+<DataTable rows={rows} selectedKey={sel} onRowClick={r=>setSel(r.id)} columns={[{key:'id',label:'Pokój',render:r=><b style={{fontSize:18}}>{r.id}</b>},{key:'type',label:'Typ'},{key:'cap',label:'Pojemność',render:r=>'do '+r.cap+' os.'},{key:'r',label:'Gotowość',render:r=><StatusBadge tone={r.r}>{r.rt}</StatusBadge>},{key:'t',label:'Suma za pobyt',align:'right',render:r=><b>{r.t} PLN</b>}]}/>
+<DataTable rows={un} tone="sunken" showHeader={false} columns={[{key:'id',label:'',render:r=><b>{r.id}</b>},{key:'type',label:''},{key:'why',label:'',render:r=><StatusBadge tone={r.why.startsWith('Zaj')?'busy':'warn'} icon={r.why.startsWith('Zaj')?'lock':'calendar-clock'}>{r.why}</StatusBadge>}]}/></div>}
+ReactDOM.createRoot(document.getElementById('root')).render(<Demo/>);
+</script></body></html>

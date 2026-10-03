@@ -1,0 +1,12 @@
+<!DOCTYPE html><html lang="pl"><head><meta charset="utf-8"><title>Test szerokości</title>
+<style>body{margin:0;padding:16px;background:#ddd;font:14px system-ui;display:flex;flex-direction:column;gap:16px}.row{display:flex;flex-direction:column;gap:6px}iframe{border:1px solid #999;background:#fff;height:1400px}pre{margin:0;padding:8px;background:#fff;white-space:pre-wrap}</style></head><body><pre id="sum">…</pre>
+<script>
+const W=[1440,1280,1024,768,390];
+W.forEach(w=>{const d=document.createElement('div');d.className='row';d.innerHTML='<b>'+w+' px</b>';const f=document.createElement('iframe');f.src='index.html';f.style.width=w+'px';f.id='f'+w;d.appendChild(f);document.body.appendChild(d);});
+function check(w){const f=document.getElementById('f'+w),doc=f.contentDocument,win=f.contentWindow;const sc=doc&&doc.querySelector('.tl-scroll');if(!sc)return 'brak renderu';
+const o=[];o.push('strona: scrollWidth '+doc.documentElement.scrollWidth+' / '+win.innerWidth+(doc.documentElement.scrollWidth>win.innerWidth?'  PRZEPEŁNIENIE':'  ok'));
+o.push('terminarz: '+(sc.scrollWidth>sc.clientWidth+1?'przewijany w poziomie ('+sc.scrollWidth+' / '+sc.clientWidth+')':'mieści się'));
+o.push('kolumna pokoi sticky: '+win.getComputedStyle(doc.querySelector('.tl-room')).position);
+o.push('wiersze pasujące: '+doc.querySelectorAll('.tl-row.is-match').length+', przygaszone: '+doc.querySelectorAll('.tl-row.is-dim').length+', paski: '+doc.querySelectorAll('.tl-bar').length);return o.join('\n');}
+setTimeout(()=>{document.getElementById('sum').textContent=W.map(w=>w+' px\n'+check(w)).join('\n\n');},5000);
+</script></body></html>
